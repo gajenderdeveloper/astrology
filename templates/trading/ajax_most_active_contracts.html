@@ -1,0 +1,30 @@
+ <div class="table-container" style="height: 500px;">
+                    <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th colspan="2" class="text-center">Most Active Contracts</th>
+                </tr>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Last update</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% if not df_call.empty %}
+                {% for index, row in df_call.iterrows %}
+                <tr>
+                    <a data-symbol="{{row.symbol}}" href="javascript:void(0);" class="stock-symbol-link"> <td>{{row.symbol}}</td>
+                    </a>
+
+                    <td>{{row.updated_at| date:"d-m-Y H:i" }}</td>
+                    
+                </tr>
+                {% endfor %}
+                {% endif %}
+                
+                
+                    </tbody>
+                </table>
+            </div>

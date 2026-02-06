@@ -1,0 +1,277 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 400px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  table thead tr th {
+    padding: 12px 8px;
+  }
+  
+  /* Table styling */
+  .table {
+    margin-bottom: 0;
+  }
+  
+  .table td {
+    padding: 8px;
+    vertical-align: middle;
+  }
+  
+  /* Color coding for positive/negative changes */
+  .positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  /* Volume highlighting */
+  .volume-high {
+    background-color: #fff3cd;
+  }
+  
+  .volume-medium {
+    background-color: #f8f9fa;
+  }
+  
+  /* Loading spinner */
+  .loading {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .spinner-border {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  
+</style>
+
+<!-- Most Active Stocks Section -->
+<section id="most-active-stocks" class="starter-section" style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+        <div class="section-header">
+            <h2>NSE Most Active Stocks by Volume</h2>
+            <p>Real-time data showing the most actively traded stocks on NSE</p>
+        </div>
+
+        
+        
+        <!-- Refresh Button -->
+        <div class="row mb-3">
+           <!-- <div class="col-md-3">
+                
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+              
+                <option {% if symbol_name == 'calls-stocks-vol'  %} selected {% endif %} value="{% url 'most_active_contracts'  %}?index=calls-stocks-vol " data-symbol="">Most Active Stocks Calls</option>
+                <option   {% if symbol_name == 'puts-stocks-vol'  %} selected {% endif %} value="{% url 'most_active_contracts'  %}?index=puts-stocks-vol " data-symbol="">Most Active Stocks Puts</option>
+            
+                
+            </select>
+            </div> -->
+            <div class="col-md-12 text-end">
+                <button class="btn btn-primary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </div>
+        
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="loading" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading most active stocks data...</p>
+        </div>
+        
+        <!-- Data Table -->
+        <div class="row" id="mostActiveTable">
+
+            <!-- {% include 'trading/ajax_most_active_contracts.html' %} -->
+             <!-- First Column -->
+            <div class="col-md-3 col-divider" id="most_active_contracts">
+               {% include 'trading/ajax_most_active_contracts.html' %}
+            </div>
+
+                <div class="col-md-3 col-divider" id="favorite_id" >
+                    {% include 'trading/ajax_favorite_symbol.html' %}
+                    
+                </div>
+
+                <!-- Second Column -->
+                  <div class="col-md-3" id="hate_id">
+                  {% include 'trading/ajax_hate_symbol.html' %}
+                  </div>
+               
+
+                <div class="col-md-3" id="lovely_id">
+                   
+                     {% include 'trading/ajax_lovely_symbol.html' %}
+                </div>
+            
+        </div>
+
+
+
+        <div class="row" id="gainer_body">
+
+            {% include 'trading/ajax_top_gainner.html' %}
+            
+        </div>
+
+        <div class="row" id="chart_id">
+            <!-- {% include 'trading/ajax_chart.html' %} -->
+        <!-- {{ chart | safe}} -->
+        </div>
+
+        <div class="row" id="coi_data_id">
+            <!-- {% include 'trading/ajax_coi_data.html' %}  -->
+       
+        </div>
+        
+        <!-- Last Updated Info -->
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <small class="text-muted">
+                    Last updated: <span id="lastUpdated">-</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+
+function top_gainer_loser() {
+    // Show loading indicator
+    // $('#loadingIndicator').show();
+    // $('#dataContainer').hide();
+    
+    // Make AJAX request to fetch data
+    $.ajax({
+        url: "{% url 'ajax_topGainers' %}",
+        type: "POST",
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'symbol': 'ss',
+            
+        },
+        success: function(response) {
+            if(response) {
+                
+                //alert('Order placed successfully'); 
+                //$('#instrumentModal').modal('hide');
+                $("#gainer_body").html(response);
+            } else {
+                alert(response);
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('Error placing order: ' + error);
+        },
+        complete: function() {
+            // $('#loadingIndicator').hide();
+            // $('#dataContainer').show();
+            // // Update last updated time
+            // var now = new Date();
+            // var formattedTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+            // $('#lastUpdated').text(formattedTime);
+        }
+    });
+}
+function mostActiveStock() {
+    $.ajax({
+            url: "{% url 'ajax_most_active_contracts' %}",
+            type: "POST",
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+                
+            },
+            success: function(response) {
+                if(response) {
+                
+                    $("#most_active_contracts").html(response.most_active_contact);
+                    $("#favorite_id").html(response.favorite);
+                    $("#hate_id").html(response.hate);
+                    $("#lovely_id").html(response.lovely);
+                } else {
+                    alert(response);
+                    alert('Error: ' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('Error placing order: ' + error);
+            },
+            complete: function() {
+                console.log('complete');
+            }
+        });
+}
+
+
+// Set the interval to 10 minutes (10 minutes * 60 seconds * 1000 milliseconds)
+setInterval(top_gainer_loser, 60000);
+
+setInterval(mostActiveStock, 120000);
+
+// Call the function immediately to load content on page load
+top_gainer_loser();
+mostActiveStock();
+
+// onclick of stock symbol link
+$(document).on('click', '.stock-symbol-link', function() {
+    var symbol = $(this).data('symbol');
+    console.log('Clicked symbol:', symbol);
+    $.ajax({
+        url: "{% url 'ajax_chart' %}",
+        type: "GET",
+        data: {
+            'symbol': symbol,
+        },
+        success: function(response) {
+            if(response) {
+
+                $('html, body').animate({
+                    scrollTop: $('#chart_id').offset().top
+                }, 1000);
+                $("#chart_id").html(response.chart_html);
+                $("#coi_data_id").html(response.html_content);
+
+                
+            } else {
+                alert('Error loading chart.');
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('Error loading chart: ' + error);
+        }
+    })    
+});
+
+
+</script>
+
+{% endblock %}

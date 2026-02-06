@@ -1,0 +1,84 @@
+{% extends "admin/change_form.html" %}
+
+{% block admin_change_form_document_ready %}
+    {{ block.super }}
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // $('#id_symbol').change(function() {
+            //     // When the filter field changes, update the autocomplete URL
+            //     var filterValue = $(this).val();
+            //     $('#id_nse_symbol').data('select2').options.options.ajax.url = '/autocomplete_url/?filter_field=' + filterValue;
+            // });
+
+            $('#id_symbol').on('select2:select', function (e) {
+               alert('Selected symbol: ' );
+            });
+        });
+
+
+    
+    </script>
+
+
+<script>
+function updateSymbolChoices(exchange) {
+    // Get the symbol select element
+    var symbolSelect = document.querySelector('[name="symbol"]');
+    
+    // Trigger a change event to make django-autocomplete-light update the choices
+    if (symbolSelect) {
+        // This will make the autocomplete widget refresh with the new exchange value
+        
+        $(symbolSelect).val('').trigger('change');
+        
+    }
+}
+function updateSymbolChoices2(symbol) {
+    // Get the symbol select element
+    exchangeSelect = document.querySelector('[name="exchange"]');
+    exchange = exchangeSelect.value
+    const orderData = {
+          exchange: exchange,
+          symbol: symbol,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+      };
+    $.ajax({
+            url: "{% url 'get_instrment' %}",
+            data: orderData,
+            success: function(response) {debugger;
+                // Update other fields with the response data
+                $('#id_quantity').val(response.data.symbols_details.lot_size);
+                $('#id_price').val(response.data.quote.last_price);
+                $('#id_stoploss').val(response.data.stoploss);
+                $('#id_trigger_price').val(response.data.target);
+            }
+        });
+    
+}
+
+$('#id_symbol').change(function(e) {
+        // Get the selected value
+        //const selectedSymbol = e.params.data.id;
+        alert('Selected symbol: ' );
+        
+        // Example: Fill another field with the selected symbol
+        $('#id_other_field').val(selectedSymbol);
+        
+        // Or make an AJAX call to get more data based on the symbol
+        /*
+        $.ajax({
+            url: '/api/get-symbol-details/',
+            data: {
+                'symbol': selectedSymbol
+            },
+            success: function(data) {
+                // Update other fields with the response data
+                $('#id_field1').val(data.field1);
+                $('#id_field2').val(data.field2);
+            }
+        });
+        */
+    });
+</script>
+{% endblock %}

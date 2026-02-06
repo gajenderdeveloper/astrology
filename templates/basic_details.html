@@ -1,0 +1,161 @@
+{% extends 'base.html' %} {% load static %} 
+
+{% block inner_html %}
+
+
+
+<main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title" data-aos="fade">
+      <div class="container d-lg-flex justify-content-between align-items-center">
+        <h1 class="mb-2 mb-lg-0">Appointment</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><a href="index.html">Home</a></li>
+            <li class="current">Appointment</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Starter Section Section -->
+    <section id="starter-section" class="starter-section section">
+
+      <!-- Section Title -->
+      
+      <div class="container">
+
+        <div class="row gy-4 pricing">
+
+          <div class="col-lg-8 border mx-1 p-2 pricing-item blog-comments" data-aos="fade-up" data-aos-delay="200">
+            
+              <h5 class="text-dark,">Basic Details</h5>
+            <hr>
+            <div class="reply-form">
+            <form action="">
+              <div class="row">
+                <div class="col form-group">
+                  <label for="uname" class="form-label">Name of the Booking Person:</label>
+                  <input name="name-booking-person" type="text" class="form-control" placeholder="Please enter the name of the person who is creating the booking.*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please write booking person name.</div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">Native Date of Birth:</label>
+                  <input name="Date" type="date" class="form-control" placeholder="DD/MM/YY*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">Native Time of Birth:</label>
+                  <input name="time" type="time" class="form-control" placeholder="Please enter your time of birth (with PM & AM)*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">Your Consultation Language :</label>
+                  <input name="language" type="text" class="form-control" placeholder=" Ex. Hindi/English...">
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">NATIVE NAME*:</label>
+                  <input name="native-name" type="text" class="form-control" placeholder="Single Line*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">Email Address*:</label>
+                  <input name="Email" type="email" class="form-control" placeholder="Enter Your Email Address*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                  <label for="uname" class="form-label">Phone Number:</label>
+                  <input name="Phone" type="tel" class="form-control" placeholder="Enter Your Phone Number*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+              </div>
+              <div class="row">
+                <label for="uname" class="form-label">Native Gender :</label>
+              <div class="form-check">
+                <input type="radio" class="form-check-input" id="radio1" name="optradio" value="male" checked>
+                &nbsp; <label class="form-check-label" for="radio1">&nbsp;  Male</label>
+              </div>
+              <div class="form-check">
+                <input type="radio" class="form-check-input" id="radio2" name="optradio" value="feamle">
+                &nbsp; <label class="form-check-label" for="radio2">&nbsp;  Feamle</label>
+              </div>
+              <div class="form-check">
+                <input type="radio" class="form-check-input" id="radio2" name="optradio" value="other">
+                &nbsp; <label class="form-check-label " for="radio2">&nbsp; Others</label>
+              </div>
+            </div>
+
+              <div class="row">  
+                <div class="col-md-6 form-group"> 
+                  <br>
+                  <label for="uname" class="form-label">Native Place Of Birth *:</label>
+                  <input name="birth-place" type="text" class="form-control" placeholder="Please fill your Birth Place*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                  <br>
+                  <label for="uname" class="form-label">Current Place *:</label>
+                  <input name="current-place" type="text" class="form-control" placeholder="Please Fill Your Current Place*" required>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please fill out this field.</div>
+                </div>
+              </div>
+
+             
+              <div class="row">
+                <div class="col form-group">
+                  <label for="uname" class="form-label">Detailed Concern *:</label>
+                  <textarea name="comment" class="form-control" placeholder="Enter Your Detailed Concern*" Required></textarea>
+                  <div class="valid-feedback">Valid.</div>
+                  <div class="invalid-feedback">Please enter appointment note</div>
+                </div>
+              </div>
+
+              <div class="text-center header">
+
+              <a class="btn-block  btn-lg" href="{% url 'appointment' %}"><i class="bi bi-arrow-left"></i> Go Back</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a class="btn-getstarted  btn-lg" href="{% url 'summary' %}">Next : Summary <i class="bi bi-arrow-right"></i></a>
+              </div>
+
+            </form>
+
+          </div>
+          </div>
+
+          <div class="col-lg-3 border p-2 pricing-item" data-aos="fade-up" data-aos-delay="100">
+            <a class="icon-link" href="{% url 'appointment' %}"> <i class="bi bi-calendar-date"></i> Date & Time [INDIAN TIME ZONE]</a>
+            <a class="icon-link" href="{% url 'basic-details' %}"><i class="bi bi-card-checklist"></i>Basic details</a>
+            <a class="icon-link" href="{% url 'summary' %}"><i class="bi bi-calendar-check"></i>Summary</a>
+           </div>
+
+        </div>
+
+      </div>
+      
+      <!-- End Section Title -->
+
+     
+
+    </section><!-- /Starter Section Section -->
+
+  </main>
+
+{% endblock %} 
+
+

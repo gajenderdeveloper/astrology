@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Trading View</title>
+  <!-- base:css -->
+  <link rel="stylesheet" href="{% static 'tradingview/assets/vendors/typicons/typicons.css' %}">
+  <link rel="stylesheet" href="{% static 'tradingview/assets/vendors/css/vendor.bundle.base.css' %}">
+  <!-- endinject -->
+  <!-- plugin css for this page -->
+  <!-- End plugin css for this page -->
+  <!-- inject:css -->
+  <link rel="stylesheet" href="{% static 'tradingview/assets/css/style.css' %}">
+  <!-- endinject -->
+  <link rel="shortcut icon" href="{% static 'tradingview/assets/images/favicon.ico' %}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+  table th, .table td {
+    vertical-align: middle;
+    line-height: 1;
+    white-space: nowrap;
+    padding: 0.6rem 0.9375rem;
+    font-size: 0.800rem;
+}
+</style>
+</head>
+<body>
+  <div class="container-scroller">
+
+     <!-- partial:partials/_navbar.html -->
+    <nav class="navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+      <div class="navbar-brand-wrapper d-flex justify-content-center">
+        <div class="navbar-brand-inner-wrapper d-flex justify-content-between align-items-center w-100">
+          <a class="navbar-brand brand-logo" href="{% url 'dashboard'%}">
+            <span style="color: white;">TradingView</span>
+            <!-- <img src="{% static 'tradingview/assets/images/logo.svg' %}" alt="logo"/> -->
+        </a>
+          <a class="navbar-brand brand-logo-mini" href="{% url 'dashboard'%}"><img src="{% static 'tradingview/assets/images/logo-mini.svg' %}" alt="logo"/></a>
+          <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
+            <span class="typcn typcn-th-menu"></span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="navbar-menu-wrapper d-flex align-items-center ">
+        <nav class=" navbar-expand-lg ">
+        <div class="container">
+       
+            
+            <!-- Navbar Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <!-- Regular Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard'%}">Dashboard</a>
+                    </li>
+                    
+                    <!-- Simple Dropdown -->
+                    <li class="nav-item dropdown">
+                        <!-- <a class="nav-link dropdown-toggle" href="{% url 'option_chain'%}" id="servicesDropdown" 
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            OPtion Chain
+                        </a> -->
+                        <a class="nav-link" href="{% url 'option_chain'%}">Option Chain</a>
+                        <!-- <ul class="dropdown-menu" aria-labelledby="servicesDropdown">
+                            <li><a class="dropdown-item" href="{% url 'option_chain'%}">Symbol List</a></li>
+                            <li><a class="dropdown-item" href="#">Development</a></li>
+                            <li><a class="dropdown-item" href="#">SEO</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Consulting</a></li>
+                        </ul> -->
+                    </li>
+                    
+                    <!-- Dropdown with Icons -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="productsDropdown" 
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Products
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="productsDropdown">
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-laptop"></i> Software
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-phone"></i> Mobile Apps
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <i class="bi bi-cloud"></i> Cloud Services
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+        
+        <!-- <ul class="navbar-nav me-lg-2">
+          <li class="nav-item nav-profile dropdown">
+            <a class="nav-link" href="#" data-bs-toggle="dropdown" id="profileDropdown">
+              
+              <span class="nav-profile-name">Gajender</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              <a class="dropdown-item">
+                <i class="typcn typcn-cog-outline text-primary"></i>
+                Settings
+              </a>
+              <a class="dropdown-item">
+                <i class="typcn typcn-eject text-primary"></i>
+                Logout
+              </a>
+            </div>
+          </li>
+         
+        </ul> -->
+ 
+      </div>
+    </nav>
+     {% block inner_html %}{% endblock %}
+
+  </div>
+  <!-- container-scroller -->
+
+  <!-- base:js -->
+  <script src="{% static 'tradingview/assets/vendors/js/vendor.bundle.base.js' %}"></script>
+  <!-- endinject -->
+  <!-- Plugin js for this page-->
+  <script src="{% static 'tradingview/assets/vendors/chart.js/chart.umd.js' %}"></script>
+  <script src="{% static 'tradingview/assets/js/jquery.cookie.js' %}"></script>
+  <!-- End plugin js for this page-->
+  <!-- inject:js -->
+  <script src="{% static 'tradingview/assets/js/off-canvas.js' %}"></script>
+  <script src="{% static 'tradingview/assets/js/hoverable-collapse.js' %}"></script>
+  <script src="{% static 'tradingview/assets/js/template.js' %}"></script>
+  <script src="{% static 'tradingview/assets/js/settings.js' %}"></script>
+  <script src="{% static 'tradingview/assets/js/todolist.js' %}"></script>
+  <!-- endinject -->
+  <!-- Custom js for this page-->
+  <script src="{% static 'tradingview/assets/js/dashboard.js' %}"></script>
+  <!-- End custom js for this page-->
+</body>
+
+</html>
+

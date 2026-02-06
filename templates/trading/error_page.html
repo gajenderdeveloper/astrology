@@ -1,0 +1,51 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+          
+            <div class="alert alert-danger" role="alert">
+              <h4 class="alert-heading">Error Occurred!</h4>
+              <p>We apologize, but something went wrong while processing your request.</p>
+              <hr>
+              <p class="mb-0">Technical Details:</p>
+              <pre>{{ error }}</pre>
+            </div>
+            
+          
+          
+        
+        </div>
+      </div>
+    </div> 
+</section><!-- /Starter Section Section -->
+
+{% endblock %}

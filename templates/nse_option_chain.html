@@ -1,0 +1,160 @@
+{% extends 'base.html' %} {% load static %} {% load custom_filters %}
+
+{% block inner_html %}
+
+
+    <!-- Page Title -->
+    <div class="page-title" data-aos="fade" style="padding: 5px 0px !important;">
+      <div class="container justify-content-between align-items-center">
+        <div class="row">
+            <div class="col-md-4">
+                <h4>NSE OPTION CHAIN</h4>
+            </div>
+            <div class="col-md-4">
+              {% if df.empty %}
+              <h1 class="" style="color: red;">{{ error }} </h1>
+             {% else %}
+              <h1 class=""><b>{{ stock_name }}-{{ current_price }} </b></h1>
+              {% endif %}
+            </div>
+            <!-- <div class="col-md-4">
+                <h4>Total Trades: {{ data.records.totalTrades }}</h4>
+            </div> -->
+        </div>
+        
+        
+        
+      </div>
+    </div><!-- End Page Title -->
+
+    
+    <!-- Starter Section Section -->
+    <section id="" class="starter-section " style="padding: 10px 0px !important;">
+
+       
+
+      <div class="container" data-aos="fade-up">
+    <form name="frm" id="frm_ption" method="get" action="{% url 'nse_option' stock_name %}">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label>Expiray Date: </label>
+                <select name="expiry" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in expirations %}
+                    <option {% if date == expiry  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if stock_name == symbol  %} selected {% endif %}  value="{% url 'nse_option' symbol %}" data-symbol="{% url 'nse_option' stock_name %}">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div>
+      
+      </div>
+    </form>
+      <div class="table-responsive" style="font-size: 12px;">
+        <table class="table table-responsive ">
+          <thead>
+            <tr>
+              <th colspan="10" style="background-color: #3a2c7d;" class="text-center  text-white">CALLS</th>
+              <th style="background-color: #3a2c7d;" class="text-center  text-white"></th>
+              <th colspan="10" style="background-color: #3a2c7d;" class="text-center text-white">PUTS</th>
+            </tr>
+            
+            <tr>
+              <th style="background-color: #3a2c7d;color: aliceblue;">OI</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Change In OI</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Volume</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">IV</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">LTP</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Change</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid Qty</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask Qty</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;" class="text-center">strike</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid Qty</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask Qty</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Change</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">LTP</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">IV</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Volume</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Change In OI</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">OI</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                 {% for index, row in df.iterrows %}
+                 {% with max_volume_x=df.volume_x.max max_volume_y=df.volume_y.max %}
+                 
+                 <tr {% if row|get_item:"strike" == current_price %}class="table-warning"{% endif %}>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.loc.openInterest_x|floatformat:0 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.loc.change_openInterest_x|floatformat:0 }}</td>
+                   
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}
+                   {% if row|get_item:"volume_x" == max_volume_x %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+                   {% if row|get_item:"volume_x" == second_largest_volume_x %} style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+                   >
+                    {{ row|get_item:"volume_x"|floatformat:0 }}
+                  </td>
+
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row|get_item:"impliedVolatility_x"|floatformat:2 }}</td>
+                   <td  {% if row|get_item:"strike" < current_price %} style="font-weight: bold;color: #295C89; background-color: #f2eed9;" {% endif %}>{{ row.lastPrice_x|floatformat:0 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.change_x|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.bidqty_x|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.bid_x|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.ask_x|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.askqty_x|floatformat:2 }}</td>
+                  
+                  
+                   <td class="text-center fw-bold" ; ">{{ row|get_item:"strike"|floatformat:2 }}</td>
+                  
+                  
+
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.bidqty_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.bid_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %}  >{{ row.ask_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %}  >{{ row.askqty_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.change_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.lastPrice_y|floatformat:2 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.impliedVolatility_y|floatformat:0 }}</td>
+                   
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %}{% if row|get_item:"volume_y" == max_volume_y %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+                    {% if row|get_item:"volume_y" == second_largest_volume_y %}  style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+                     >
+                    {{ row|get_item:"volume_y"|floatformat:2 }}
+
+                   </td>
+
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row|get_item:"change_openInterest_y"|floatformat:0 }}</td>
+                   <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row|get_item:"openInterest_y"|floatformat:0 }}</td>
+                  
+                 </tr>
+                 
+                 {% endwith %}
+                 {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      </div> 
+
+       
+      
+
+    </section><!-- /Starter Section Section -->
+
+
+<script>
+    setTimeout(function () {
+    window.location.reload(1);
+}, 120000);  // After 5 secs
+</script>
+{% endblock %} 

@@ -1,0 +1,326 @@
+{% extends 'tradingview/base.html' %} 
+{% load static %} 
+
+{% block inner_html %}
+
+    <!-- partial -->
+  
+    <!-- {% include 'tradingview/top_menu.html' %} -->
+
+    <div class="container-fluid page-body-wrapper">      
+      <!-- partial:partials/_sidebar.html -->
+        
+      <!-- partial -->
+      <div class="main-panel" style="width: 100%;">
+         <div class="content-wrapper">
+          <div class="row">
+            <div class="col-md-2  stretch-card" >
+             <div class="card-text small position-fixed" >
+                <div class="body_top_gainer">
+                <div class="card-header bg-light p-0">
+                    <a href="#gainerTable_2" class="btn btn-outline-light w-100 text-start fw-bold fs-5 p-3 border-0" data-bs-toggle="collapse" aria-expanded="true" aria-controls="gainerTable_2">
+                        Top Gainers 
+                    </a>
+                </div>
+                  <div class="table-responsive collapse show" id="gainerTable_2">
+                    
+                     <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody id="gainerTable">
+                            {% include 'tradingview/ajax_top_gainner.html' %}
+                        </tbody>
+                        </table>
+                    </div>
+                   
+                    </div>
+                </div>
+
+                <div class="body_mostattractive">
+                <div class="card-header bg-light p-0">
+                    <a href="#mostattractiveTable" class="btn btn-outline-light w-100 text-start fw-bold fs-5 p-3 border-0" data-bs-toggle="collapse" aria-expanded="true" aria-controls="mostattractiveTable">
+                        Most Attractive 
+                    </a>
+                </div>
+                  <div class="table-responsive collapse hide" id="mostattractiveTable">
+                    <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% include 'tradingview/ajax_most_active_contracts.html' %}
+                            {% for index, row in top_gainers.iterrows %}
+                            <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+                            <td>{{row.symbol}}</td>
+                            <td>{{row.change_in_price_percentage}}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+
+
+                
+              </div>
+
+              
+              
+            </div>
+            <div class="col-md-10 grid-margin stretch-card" style="--bs-gutter-x:0px">
+              <div class="card">
+                <div class="card-body " style="padding:0.5rem 0.8rem">
+                  
+                  <div class="" id="chart_id">
+                    <!-- Chart content here -->
+                  </div>
+                </div>
+
+                 <div class="card-body" style="padding:0.5rem 0.8rem">
+                  <div class="table-responsive " id="coi_data_id" >
+                     <!-- Table content here -->
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+
+
+            
+
+            
+           
+          </div>
+        </div>
+        
+        <!-- content-wrapper ends -->
+        <!-- partial:partials/_footer.html -->
+        <!-- <footer class="footer">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-sm-flex justify-content-center justify-content-sm-between">
+                        <span class="text-muted text-center text-sm-left d-block d-sm-inline-block">Copyright © 2026 <a href="#" class="text-muted" target="_blank">Trading View</a>. All rights reserved.</span>
+                        <span class="float-none float-sm-right d-block mt-1 mt-sm-0 text-center text-muted">made by gajender <i class="typcn typcn-heart-full-outline text-danger"></i></span>
+                    </div>
+                </div>    
+            </div>        
+        </footer> -->
+        <!-- partial -->
+      </div>
+      <!-- main-panel ends -->
+    </div>
+    <!-- page-body-wrapper ends -->
+
+<style>
+    .sortable {
+        cursor: pointer;
+        position: relative;
+        user-select: none;
+    }
+    
+    .sortable:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .sort-icon {
+        margin-left: 8px;
+        font-size: 0.8em;
+        opacity: 0.5;
+    }
+    
+    .sortable.sorted-asc .sort-icon i {
+        color: #0d6efd;
+        opacity: 1;
+    }
+    
+    .sortable.sorted-desc .sort-icon i {
+        color: #0d6efd;
+        opacity: 1;
+    }
+    
+    .sorted-asc .sort-icon i::before {
+        content: "\f128"; /* Bootstrap Icons arrow-up */
+    }
+    
+    .sorted-desc .sort-icon i::before {
+        content: "\f148"; /* Bootstrap Icons arrow-down */
+    }
+</style>
+
+<script>
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    let currentSort = { column: null, direction: 'asc' };
+    
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.dataset.sort;
+            const table = this.closest('table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Remove sorted classes from all headers
+            sortableHeaders.forEach(h => {
+                h.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            
+            // Determine sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Add appropriate class to current header
+            this.classList.add(`sorted-${currentSort.direction}`);
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const aValue = a.querySelector(`td:nth-child(${Array.from(this.parentNode.children).indexOf(this) + 1})`).textContent;
+                const bValue = b.querySelector(`td:nth-child(${Array.from(this.parentNode.children).indexOf(this) + 1})`).textContent;
+                
+                // Try to convert to numbers for numeric sorting
+                const aNum = parseFloat(aValue);
+                const bNum = parseFloat(bValue);
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return currentSort.direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+                
+                // Fallback to string sorting
+                return currentSort.direction === 'asc' 
+                    ? aValue.localeCompare(bValue)
+                    : bValue.localeCompare(aValue);
+            });
+            
+            // Reorder table rows
+            rows.forEach(row => tbody.appendChild(row));
+        });
+    });
+
+// onclick of stock symbol link
+$(document).on('click', '.stock-symbol-link', function() {
+    var symbol = $(this).data('symbol');
+    console.log('Clicked symbol:', symbol);
+    load_chart(symbol)
+      
+});
+
+function load_chart(symbol){
+   
+    $.ajax({
+        url: "{% url 'ajax_option_chain' %}",
+        type: "GET",
+        data: {
+            'symbol': symbol,
+        },
+        success: function(response) {
+            if(response) {
+
+                // $('html, body').animate({
+                //     scrollTop: $('#chart_id').offset().top
+                // }, 1000);
+                $("#chart_id").html(response.chart_html);
+                $("#coi_data_id").html(response.html_content);
+
+                
+            } else {
+                alert('Error loading chart.');
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('Error loading chart: ' + error);
+        }
+    }) 
+}
+load_chart('{{ default_symbol }}')
+
+});
+
+function top_gainer_loser() {
+    // Show loading indicator
+    // $('#loadingIndicator').show();
+    // $('#dataContainer').hide();
+    
+    // Make AJAX request to fetch data
+    $.ajax({
+        url: "{% url 'option_chain' %}",
+        type: "POST",
+        data: {
+            'csrfmiddlewaretoken': '{{ csrf_token }}',
+            'type11': 'ajax',
+            
+        },
+        success: function(response) {
+            if(response) {
+                
+                //alert(response.html_content); 
+                //$('#instrumentModal').modal('hide');
+                $("#gainerTable").html(response.html_content);
+            } else {
+                alert(response);
+                alert('Error: ' + response.error);
+            }
+        },
+        error: function(xhr, status, error) {
+            alert('Error placing order: ' + error);
+        },
+        complete: function() {
+            // $('#loadingIndicator').hide();
+            // $('#dataContainer').show();
+            // // Update last updated time
+            // var now = new Date();
+            // var formattedTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+            // $('#lastUpdated').text(formattedTime);
+        }
+    });
+}
+
+// Set the interval to 10 minutes (10 minutes * 60 seconds * 1000 milliseconds)
+// setInterval(top_gainer_loser, 10000);
+setInterval(function() {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay();
+    
+    // Check if it's a weekday (Monday-Friday) and between 9 AM and 4 PM
+    if (day >= 1 && day <= 5 && hour >= 9 && hour < 16) {
+        top_gainer_loser();
+    }
+}, 20000);
+</script>
+{% endblock %}

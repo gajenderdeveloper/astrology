@@ -1,0 +1,262 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label> Date Time: </label>
+                <select name="created_date" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in date_unique %}
+                    <option {% if date == created_date  %} selected {% endif %} value="{{ date|date:"Y-m-d" }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label> Type: </label>
+                <select name="type" class="form-select" id="type_id" onchange="this.form.submit()">
+                    {% for type_value,type_name in type_list %}
+                    <option {% if type == type_value  %} selected {% endif %} value="{{ type_value }}">{{ type_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label> Search: </label>
+                <input type="text" class="form-control" id="searchInput" name="search" value="{{ search }}" placeholder="Search by Symbol">
+               
+            </div>
+            <!-- <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'oi_option' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div> -->
+           
+            
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+            <table id="pre_market_id" class="table table-striped sticky-table" width="100%">
+                <thead>
+                <tr>
+                    
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Open</th>
+                    <th scope="col">High</th>
+                    <th scope="col">Low</th>
+                    <th scope="col">Close</th>
+                    <th scope="col">Last Price</th>
+                    <th scope="col">Change</th>
+                    <th scope="col">Change Percentage%</th>
+                    <th scope="col">Volume </th>
+                    <th scope="col">OI</th>
+                    <th scope="col">Buy Quantity</th>
+                    <th scope="col">Sell Quantity</th>
+                    <th scope="col">Type</th>
+
+                    <th scope="col">Created Date</th>
+                    
+                    
+                </tr>
+                </thead>
+                <tbody>
+                {% for index, row in df.iterrows %}
+                <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                   
+                    <td {% if row.is_new %} style="font-weight: bold;" {% endif %} >
+                      <a target="_blank" href="{% url 'oi_option' row.symbol %}">
+                      {{ row.symbol }}
+                      </a>
+                    </td>
+                    <td>{{ row.open }}</td>
+                    <td>{{ row.high}}</td>
+                    <td>{{ row.low}}</td>
+                    <td>{{ row.close}}</td>
+                    <td>{{ row.last_price }}</td>
+                    <td>{{ row.change }}</td>
+                    <td style="font-weight: bold;">{{ row.change_percentage }}%</td>
+                    <td style="{% if row.volume == max_voulume %} background-color: rgb(232, 250, 215); {% endif %}">{{ row.volume }}</td>
+                    <td>{{ row.oi }}</td>
+                    <td>{{ row.buy_quantity }}</td>
+                    <td>{{ row.sell_quantity }}</td>
+                    <td>{{ row.type }}</td>
+                    <td>{{ row.date }}</td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        
+        </div>
+      </div>
+    </div> 
+</section><!-- /Starter Section Section -->
+
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">{{ symbol_name }} Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tradingview-chart-container" style="width: 100%; height: 600px;">
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+           
+            <span id="tradingsymbol_id"></span>
+        </div>
+        <div style="margin-left: 20px;">
+            <h5 class="modal-title d-inline" id="instrumentModalLabel">Cash: </h5>
+            <span id="cash_margin"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="strikePrice" class="form-label">Price</label>
+                <input type="text" class="form-control" id="strikePrice">
+              </div>
+           
+              <div class="mb-3">
+                <label for="orderType" class="form-label">Transaction Type</label>
+                <select class="form-select" id="orderType">
+                  <option value="BUY">BUY</option>
+                  <option value="SELL">SELL</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" value="" step="any">
+              </div>
+              <div class="mb-3">
+                <label for="productType" class="form-label">Product Type</label>
+                <select class="form-select" id="productType">
+                  <option value="NRML">NRML</option>
+                  <option value="MIS">MIS</option>
+                  
+                  <option value="CNC">CNC</option>
+                </select>
+              </div>
+              
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="orderVariant" class="form-label">Order Variant</label>
+                <select class="form-select" id="orderVariant">
+                  <option value="LIMIT">Limit</option>
+                  <option value="MARKET">Market</option>
+                  <option value="SL">Stop Loss</option>
+                  <option value="SL-M">Stop Loss Market</option>
+                </select>
+              </div>
+              
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3" id="triggerPriceField" style="display: none;">
+                <label for="triggerPrice" class="form-label">Trigger Price</label>
+                <input type="text" class="form-control" id="triggerPrice">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add jQuery and DataTables scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Create the DataTable
+    var table = $('#pre_market_id').DataTable({
+        "pageLength": 50, // Show 50 rows per page by default
+        "lengthMenu": false, // This disables the page length dropdown
+        "order": [[7, "desc"]], // Default sort by Change In OI Qty descending
+        "scrollX": true, // Enable horizontal scrolling if needed
+        "responsive": true,
+        "dom": '<"top"f>rt<"bottom"ip>', // Removed "l" from dom to hide length menu
+        // "columnDefs": [
+        //     { "type": "num", "targets": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] }, // Specify numeric columns for proper sorting
+        //     { "className": "dt-center", "targets": "_all" } // Center align all columns
+        // ]
+    });
+    
+    // Add custom search input
+    // $('<div class="custom-search">' +
+    //   '<input type="text" id="customSearchInput" placeholder="Search...">' +
+    //   '</div>').insertBefore('#coi_increase_wrapper .dataTables_filter');
+    
+    // Hide the default search
+    $('#pre_market_id_filter').hide();
+    
+    // Apply the search when user types in custom input
+    $('#searchInput').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+});
+</script>
+{% endblock %}

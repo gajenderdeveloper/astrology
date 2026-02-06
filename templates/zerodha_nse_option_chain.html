@@ -1,0 +1,231 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #3a2c7d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+<style>
+  .sticky-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .sticky-table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+  }
+  
+  .sticky-table-container {
+    height: 700px; /* Set your desired height */
+    overflow: auto;
+  }
+</style>
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label>Expiray Date: </label>
+                <select name="expiry" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in expiry_list %}
+                    <option {% if date == expiry_date  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'oi_option' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-primary mt-4" onclick="javascript:location.reload()" >
+                    Refresh
+                </button>
+            </div>
+            <!-- <div class="col-md-2">
+                <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#chartModal">
+                    View Chart
+                </button>
+            </div> -->
+
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+        <table class="table table-bordered table-container sticky-table"  >
+        <thead >
+              <tr style="background-color: #3a2c7d;">
+                <th colspan="7" class="text-center text-white">CALLS</th>
+                <th class="text-center text-white">Price: {{ current_price }}</th>
+                <th colspan="7" class="text-center text-white">PUTS</th>
+              </tr>
+              
+              <tr style=" background-color: #3a2c7d;">
+                <th style="color: aliceblue;"></th>
+                <th style="color: aliceblue;">OI</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">LTP</th>
+                <th class="text-center" style="color: aliceblue;">Strike</th>
+                <th style="color: aliceblue;">LTP</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">OI</th>
+                <th style="color: aliceblue;"></th>
+              </tr>
+            </thead>
+          <tbody>
+            
+                 {% for index, row in df.iterrows %}
+
+                  
+                 
+                 
+                 <tr {% if row|get_item:"strike" == current_price %}class="table-warning"{% endif %}>
+
+                  <td style = "{{ row.CE_color }}" >
+                  <a target="_blank" href="https://www.tradingview.com/chart/?symbol=NSE:{{ symbol_name }}" class="text-center fw-bold">
+                  <i class="bi bi-graph-up" style="margin-right: 5px; cursor: pointer;" ></i>
+              </td>
+                   <td style = "{{ row.CE_color_total_oi }}" >
+                    {{ row.loc.CE_oi| indian_notation }}
+                  </td>
+                   <td style = "{{ row.CE_color_change_in_oi }}" >
+                    {{ row.loc.CE_change_in_oi| indian_notation }}
+                   </td>
+
+                   
+                   <td style = "{{ row.CE_color_volume }}">
+                    {{ row|get_item:"CE_volume"|indian_notation }}
+                  </td>
+                  <td style = "{{ row.CE_color }}">
+                      {{ row|get_item:"CE_day_low"|floatformat:2 }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                      {{ row|get_item:"CE_day_high"|floatformat:2 }}
+                  </td>
+
+                   <td style = "{{ row.CE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                         data-lot_size="{{ row|get_item:'CE_lot_size'}}"
+                        data-instrument="{{ row|get_item:'CE_instrument_token'}}"
+                        data-tradingsymbol="{{ row|get_item:'CE_tradingsymbol' }}"
+                        data-symbol="{{ symbol_name }}" 
+                        data-symbol_instrument = "{{ symbol_instrument }}"
+                        data-symbol_lastprice = "{{ symbol_lastprice }}"
+                        data-option_type = 'CE'
+                      >
+                    {{ row|get_item:"CE_ltp"|floatformat:2 }}
+                    </a>
+                    ({{ row|get_item:"CE_ltp_low_pecent"|floatformat:2 }}%)
+                  </td>
+
+
+                  
+                   <td class="text-center fw-bold"; style="background-color: #FFD580;"">
+                    {{ row|get_item:"strike"| indian_notation }}
+                  </td>
+
+                   <td style = "{{ row.PE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                    data-lot_size="{{ row|get_item:'PE_lot_size'}}"
+                   data-instrument="{{ row|get_item:'PE_instrument_token'}}"
+                   data-tradingsymbol="{{ row|get_item:'PE_tradingsymbol' }}"
+                    data-symbol="{{ symbol_name }}" 
+                    data-symbol_instrment = "{{ symbol_instrument }}"
+                    data-symbol_lastprice = "{{ symbol_lastprice }}"
+                    data-option_type = 'PE'
+                   >
+                   {{ row.PE_ltp|floatformat:2 }}
+                    
+                  </a>
+                  &nbsp;({{ row|get_item:"PE_ltp_low_pecent"|floatformat:2 }}%)
+                   </td>
+                    <td style = "{{ row.PE_color }}">
+                      {{ row|get_item:"PE_day_high"|floatformat:2 }}
+                  </td>
+                    <td style = "{{ row.PE_color }}">
+                        {{ row|get_item:"PE_day_low"|floatformat:2 }}
+
+                   <td  style="{{ row.PE_color_volume }}">
+                    {{ row|get_item:"PE_volume"|indian_notation }}
+
+                   </td>
+
+                  <td style="{{ row.PE_color_change_in_oi }}"  >{{ row.loc.PE_change_in_oi| indian_notation }}</td>
+
+                   <td style="{{ row.PE_color_total_oi}}">{{ row|get_item:"PE_oi"| indian_notation }}</td> 
+
+                   <td style="{{ row.PE_color}}"><i class="bi bi-graph-up" style="margin-right: 5px; cursor: pointer;" 
+               onclick="showOIGraph('{{ symbol_name }}', '{{ expiry_date }}', '{{ row.strike }}', 'CE')"></i></td>
+                  
+                 </tr>
+                 
+                 
+                 
+                
+                 {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      </div> 
+</section><!-- /Starter Section Section -->
+
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">{{ symbol_name }} Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tradingview-chart-container" style="width: 100%; height: 600px;">
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}

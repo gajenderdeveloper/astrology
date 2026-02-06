@@ -1,0 +1,121 @@
+{% load custom_filters %}
+   <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+        <table class="table table-bordered table-container sticky-table"  >
+        <thead >
+              <tr style="background-color: #3a2c7d;">
+                <th colspan="7" class="text-center text-white">CALLS</th>
+                <th class="text-center text-white">Price: {{ current_price }}</th>
+                <th colspan="7" class="text-center text-white">PUTS</th>
+              </tr>
+              
+              <tr style=" background-color: #3a2c7d;">
+              
+                <th style="color: aliceblue;">OI</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">Day Open</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">LTP</th>
+
+                <th class="text-center" style="color: aliceblue;">Strike</th>
+
+                <th style="color: aliceblue;">LTP</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Day Open</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">OI</th>
+               
+              </tr>
+            </thead>
+          <tbody>
+            
+                 {% for index, row in df_oi.iterrows %}
+
+                  
+                 
+                 
+                 <tr {% if row|get_item:"strike" == current_price %}class="table-warning"{% endif %}>
+
+                 
+                   <td style = "{{ row.CE_color_total_oi }}" >
+                    {{ row.loc.call_oi| indian_notation }}
+                  </td>
+                   <td style = "{{ row.CE_color_change_in_oi }}" >
+                    
+                    {{ row.loc.call_coi| indian_notation }}
+                   
+                   </td>
+
+                   
+                   <td style = "{{ row.CE_color_volume }}">
+                    {{ row|get_item:"call_volume"|indian_notation }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_open" }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_low" }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_high"}}
+                  </td>
+               
+                   <td style = "{{ row.CE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                         data-lot_size="{{ row|get_item:'CE_lot_size'}}"
+                        data-instrument="{{ row|get_item:'CE_instrument_token'}}"
+                        data-tradingsymbol="{{ row|get_item:'CE_tradingsymbol' }}">
+                    {{ row|get_item:"call_current_price"|floatformat:2 }}
+                    </a>
+                  </td>
+
+
+                  
+                   <td class="text-center fw-bold"; style="background-color: #FFD580;"">
+                    {{ row|get_item:"strike"| indian_notation }}
+                  </td>
+
+                   <td style = "{{ row.PE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                    data-lot_size="{{ row|get_item:'PE_lot_size'}}"
+                   data-instrument="{{ row|get_item:'PE_instrument_token'}}"
+                   data-tradingsymbol="{{ row|get_item:'PE_tradingsymbol' }}">
+                   {{ row.put_current_price|floatformat:2 }}
+                  </a>
+                   </td>
+
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_high"}}
+                    </td>
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_low"}}
+                    </td>
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_open"}}
+                    </td>
+
+                    <td style = "{{ row.PE_color_volume }}">
+                    {{ row|get_item:"put_volume"|indian_notation }}
+                  </td>
+                  
+
+                  <td style="{{ row.PE_color_change_in_oi }}"  >{{ row.loc.put_coi| indian_notation }}</td>
+
+                   <td style="{{ row.PE_color_total_oi}}">{{ row|get_item:"put_oi"| indian_notation }}</td> 
+
+                  
+                  
+                 </tr>
+                 
+                 
+                 
+                
+                 {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>

@@ -1,0 +1,12 @@
+/* Makes fieldsets with 'extrapretty' class display in two columns */
+fieldset.extrapretty div.form-row {
+    display: inline-block;
+    width: 48%;
+    vertical-align: top;
+    box-sizing: border-box;
+    padding-right: 2%;
+}
+
+fieldset.extrapretty div.form-row:last-child {
+    padding-right: 0;
+}

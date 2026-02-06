@@ -1,0 +1,263 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label> Date Time: </label>
+                <select name="created_date" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in date_unique %}
+                    <option {% if date == created_date  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label> Search: </label>
+                <input type="text" class="form-control" id="searchInput" name="search" value="{{ search }}" placeholder="Search by Symbol">
+               
+            </div>
+            <!-- <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'oi_option' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div> -->
+
+            <p class="date">
+              <span id="theDate">ss</span>
+            </p>
+           
+            
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+            <table id="coi_increase" class="table table-striped sticky-table">
+                <thead>
+                <tr>
+                    
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Prev.OI Qty</th>
+                    <th scope="col">OI Qty</th>
+                    <th scope="col">Change In OI Qty</th>
+                    <th scope="col">Change In OI Qty %</th>
+
+                    <th scope="col">OI</th>
+                    <th scope="col">Change in OI</th>
+                    <th scope="col">Change in OI %</th>
+
+                    <th scope="col">Current Price</th>
+                    <th scope="col">Previous Close</th>
+                    <th scope="col">Change in Price</th>
+                    <th scope="col">Change in Price %</th>
+                    
+                    <!-- <th scope="col">Trade</th> -->
+                </tr>
+                </thead>
+                <tbody>
+                {% for index, row in df.iterrows %}
+                <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                   
+                    <td {% if row.is_new %} style="font-weight: bold;" {% endif %} >
+                      <a target="_blank" href="{% url 'oi_option' row.name %}">
+                      {{ row.tradingsymbol }}
+                      </a>
+                    </td>
+                    <td>{{ row.prev_oi_quantity }}</td>
+                    <td>{{ row.oi_quantity | indian_notation }}</td>
+                    <td {% if row.change_in_oi_quantity in max_coi_quantity %} style="background-color: rgba(0, 255, 0, 0.2);" {% endif %}>
+                      {{ row.change_in_oi_quantity | indian_notation}}
+                    </td>
+                    <td>{{ row.change_in_oi_percentage_quantity|floatformat:2 }}%</td>
+
+                    <td>{{ row.oi }}</td>
+                    <td>{{ row.change_in_oi }}</td>
+                    <td>{{ row.change_in_oi_percentage|floatformat:2 }}%</td>
+
+                    <td>{{ row.current_price|floatformat:2 }}</td>
+                    <td>{{ row.previous_close|floatformat:2 }}</td>
+                    <td>{{ row.change_in_price |floatformat:2 }}</td>
+                    <td>{{ row.change_in_price_percentage |floatformat:2 }}</td>
+                    <!-- <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#instrumentModal" data-symbol="{{ row.tradingsymbol }}">Trade</button></td> -->
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        
+        </div>
+      </div>
+    </div> 
+</section><!-- /Starter Section Section -->
+
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">{{ symbol_name }} Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tradingview-chart-container" style="width: 100%; height: 600px;">
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+           
+            <span id="tradingsymbol_id"></span>
+        </div>
+        <div style="margin-left: 20px;">
+            <h5 class="modal-title d-inline" id="instrumentModalLabel">Cash: </h5>
+            <span id="cash_margin"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="strikePrice" class="form-label">Price</label>
+                <input type="text" class="form-control" id="strikePrice">
+              </div>
+           
+              <div class="mb-3">
+                <label for="orderType" class="form-label">Transaction Type</label>
+                <select class="form-select" id="orderType">
+                  <option value="BUY">BUY</option>
+                  <option value="SELL">SELL</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" value="" step="any">
+              </div>
+              <div class="mb-3">
+                <label for="productType" class="form-label">Product Type</label>
+                <select class="form-select" id="productType">
+                  <option value="NRML">NRML</option>
+                  <option value="MIS">MIS</option>
+                  
+                  <option value="CNC">CNC</option>
+                </select>
+              </div>
+              
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="orderVariant" class="form-label">Order Variant</label>
+                <select class="form-select" id="orderVariant">
+                  <option value="LIMIT">Limit</option>
+                  <option value="MARKET">Market</option>
+                  <option value="SL">Stop Loss</option>
+                  <option value="SL-M">Stop Loss Market</option>
+                </select>
+              </div>
+              
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3" id="triggerPriceField" style="display: none;">
+                <label for="triggerPrice" class="form-label">Trigger Price</label>
+                <input type="text" class="form-control" id="triggerPrice">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add jQuery and DataTables scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Create the DataTable
+    var table = $('#coi_increase').DataTable({
+        "pageLength": 50, // Show 50 rows per page by default
+        "lengthMenu": false, // This disables the page length dropdown
+        "order": [[4, "desc"]], // Default sort by Change In OI Qty descending
+        "scrollX": true, // Enable horizontal scrolling if needed
+        "responsive": true,
+        "dom": '<"top"f>rt<"bottom"ip>', // Removed "l" from dom to hide length menu
+        // "columnDefs": [
+        //     { "type": "num", "targets": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] }, // Specify numeric columns for proper sorting
+        //     { "className": "dt-center", "targets": "_all" } // Center align all columns
+        // ]
+    });
+    
+    // Add custom search input
+    // $('<div class="custom-search">' +
+    //   '<input type="text" id="customSearchInput" placeholder="Search...">' +
+    //   '</div>').insertBefore('#coi_increase_wrapper .dataTables_filter');
+    
+    // Hide the default search
+    $('#coi_increase_filter').hide();
+    
+    // Apply the search when user types in custom input
+    $('#searchInput').on('keyup', function() {
+        table.search(this.value).draw();
+    });
+});
+
+setInterval(() => { 
+  document.getElementById("theDate").innerHTML = new Date().toLocaleDateString('en-gb', { weekday:"long", year:"numeric", month:"short", day:"numeric", hour:"numeric", minute:"numeric", second:"numeric"}); 
+},1000);
+</script>
+{% endblock %}

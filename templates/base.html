@@ -1,0 +1,612 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Home || Astro</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Source+Sans+Pro:ital,wght@0,200;0,300;0,400;0,600;0,700;0,900;1,200;1,300;1,400;1,600;1,700;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  
+
+  <!-- {% static 'css/select2.min.css' %}' %} -->
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <script src="https://unpkg.com/htmx.org"></script>
+
+  <style>
+    .calendar-table {
+      text-align: center;
+      border-collapse: collapse;
+    }
+    .calendar-table th, .calendar-table td {
+      padding: 10px;
+      cursor: pointer;
+    }
+    .calendar-table td:hover:not(.booked, .current-day) {
+      background-color: #f0f0f0;
+    }
+    .selected {
+      background-color: #0d6efd;
+      color: white;
+    }
+    .booked {
+      background-color: red;
+      color: white;
+      cursor: not-allowed;
+    }
+    .current-day {
+      background-color: green;
+      color: white;
+    }
+    .navigation {
+      margin-bottom: 20px;
+    }
+  </style>
+ 
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
+
+      <a href="{% url 'home' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <!-- <img src="{% static 'assets/img/logo.png' %}" alt=""> -->
+        <h1 class="sitename">Astro</h1>
+        <span>.</span>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'home' %}" class="active">Home<br></a></li>
+          <!-- check user name reena -->
+          {% if user.username == 'reena' %}
+          <li class="dropdown"><a href="#"><span>Trading</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'scanner_increase_coi'  %}">Change in OI Increasing Data</a></li>
+              <li><a href="{% url 'scanner_coi'  %}">Change in OI</a></li>
+              <li><a href="{% url 'scanner_200ma'  %}">Scanner 200ma</a></li>
+              <li><a href="{% url 'pre_market'  %}">Pre Market</a></li>
+            </ul>
+          </li>
+          {% endif %}
+
+          <li class="dropdown"><a href="#"><span>Horoscopes</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <!-- <li><a href="{% url 'horoscope' horoscope_slug %}">Love and Relationship</a></li> -->
+             <!-- <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="#">Deep Dropdown 1</a></li>
+                  <li><a href="#">Deep Dropdown 2</a></li>
+                  <li><a href="#">Deep Dropdown 3</a></li>
+                  <li><a href="#">Deep Dropdown 4</a></li>
+                  <li><a href="#">Deep Dropdown 5</a></li>
+                </ul>
+              </li>-->
+
+            {%if header %}
+        	 {% for horoscope in header %}
+
+              <li><a href="{% url 'horoscope' horoscope.slug %}">{{horoscope.name}}</a></li>
+
+              {% endfor %}
+            {% endif %}  
+
+            </ul>
+          </li>
+          <!-- <li><a href="{% url 'horoscope' horoscope_slug  %}">Horoscopes</a></li> -->
+          <li><a href="{% url 'appointment'  %}">Appointment</a></li>
+          <li><a href="{% url 'price'  %}">Pricing</a></li>
+          <li class="dropdown"><a href="#"><span>Option Chain</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+                  <li><a href="{% url 'oi_option' 'ABB' %}">Option Chain</a></li>
+                  
+                  <li><a href="{% url 'option_chain' 'TSLS' %}">Yahoo Option Chain</a></li> 
+
+                  <li><a href="{% url 'option_chain_coi' 'ABB' %}">PRE COI </a></li>
+                 
+                </ul>
+          </li>
+
+          <li> <a class="btn-login" href="{% url 'login_new'  %}">Login</a></li>
+        
+          <li><a class="btn-getstarted" href="{% url 'signup'  %}">Sign Up</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+
+    {% block inner_html %}{% endblock %}
+
+  </main>
+
+  <footer id="footer" class="footer">
+
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-4 col-md-6 footer-about">
+            <a href="{% url 'home' %}" class="logo d-flex align-items-center">
+              <span class="sitename">Astro</span>
+            </a>
+            <div class="footer-contact pt-3">
+              <p>A108 Adam Street</p>
+              <p>New York, NY 535022</p>
+              <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
+              <p><strong>Email:</strong> <span>info@example.com</span></p>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><a href="{% url 'home' %}">Home</a></li>
+              <li><a href="{% url 'about-us' %}">About</a></li>
+              <li><a href="appoinmemt.html">Appointment</a></li>
+             
+            </ul>
+          </div>
+
+          <!-- <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><a href="love-and-relationship.html">Love And Relationships</a></li>
+              <li><a href="financial-outlook.html">Financial Outlook</a></li>
+              <li><a href="property.html">Property</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><a href="child-related.html">Child Related</a></li>
+              <li><a href="health.html">Health</a></li>
+              <li><a href="legal-cases.html">Legal Cases</a></li>
+            </ul>
+          </div> -->
+
+          <div class="col-lg-2 col-md-3 footer-links">
+            <h4>Our Terms</h4>
+            <ul>
+              <li><a href="{% url 'terms-and-Conditions' %}">Terms and Cancellation Policy</a></li>
+              <li><a href="{% url 'refund-policy' %}">Refund policy</a></li>
+              <li><a href="{% url 'privacy-policy' %}">Privacy policy</a></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="copyright text-center">
+      <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">
+
+        <div class="d-flex flex-column align-items-center align-items-lg-start">
+          <div>
+            © Copyright <strong><span>MyWebsite</span></strong>. All Rights Reserved
+          </div>
+          <div class="credits">Powered by <a href="#">Gajender</a>
+          </div>
+        </div>
+
+        <div class="social-links order-first order-lg-last mb-3 mb-lg-0">
+          <a href=""><i class="bi bi-twitter-x"></i></a>
+          <a href=""><i class="bi bi-facebook"></i></a>
+          <a href=""><i class="bi bi-instagram"></i></a>
+          <a href=""><i class="bi bi-linkedin"></i></a>
+        </div>
+
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+<!-- Order Modal -->
+<div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+           
+            <span id="tradingsymbol_id"></span>
+        </div>
+        <div style="margin-left: 20px;">
+            <h5 class="modal-title d-inline" id="instrumentModalLabel">Cash: </h5>
+            <span id="cash_margin"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <input type="hidden" id="instrumentToken" value="">
+          <input type="hidden" id="option_type" value="">
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="strikePrice" class="form-label">Price</label>
+                <input type="text" class="form-control" id="strikePrice">
+              </div>
+           
+              <div class="mb-3">
+                <label for="orderType" class="form-label">Transaction Type</label>
+                <select class="form-select" id="orderType">
+                  <option value="BUY">BUY</option>
+                  <option value="SELL">SELL</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" value="" step="any">
+              </div>
+              <div class="mb-3">
+                <label for="productType" class="form-label">Product Type</label>
+                <select class="form-select" id="productType">
+                  <option value="NRML">NRML</option>
+                  <option value="MIS">MIS</option>
+                  
+                  <option value="CNC">CNC</option>
+                </select>
+              </div>
+              
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="orderVariant" class="form-label">Order Variant</label>
+                <select class="form-select" id="orderVariant">
+                  <option value="LIMIT">Limit</option>
+                  <option value="MARKET">Market</option>
+                  <option value="SL">Stop Loss</option>
+                  <option value="SL-M">Stop Loss Market</option>
+                </select>
+              </div>
+              
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3" id="triggerPriceField" style="display: none;">
+                <label for="triggerPrice" class="form-label">Trigger Price</label>
+                <input type="text" class="form-control" id="triggerPrice">
+              </div>
+            </div>
+          </div>
+
+          <!-- hrozontal line-->
+          <hr>
+          <!-- Parent Symbol and Price -->
+           <div class="row">
+             <div class="col-md-6">
+              <div class="mb-3">
+                <label for="symbol_lastprice" class="form-label">Using Parent Symbol</label>
+                 <input type="checkbox" class="form-check-input" value="1" name="use_parent_symbol" id="use_parent_symbol" checked>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="symbol_lastprice" class="form-label">Type</label>
+                 <input type="radio" class="form-check-input" name="strategy_type" id="strategy_type" value="ATH" checked> ATH
+                 <input type="radio" class="form-check-input" name="strategy_type" id="strategy_type" value="ATL"> ATL
+              </div>
+            </div>
+            
+           
+
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="paraent_symbol" class="form-label">Parent Symbol</label>
+                <input type="text" class="form-control" name="paraent_symbol" id="paraent_symbol" value="{{ symbol_name }}">
+              </div>
+
+            </div>
+
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="symbol_lastprice" class="form-label">Symbol Price</label>
+                 <input type="TEXT" class="form-control" name="symbol_price" id="symbol_price" value="{{ symbol_lastprice }}">
+              </div>
+            </div>
+
+
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+
+<script>
+//     setTimeout(function () {
+//     window.location.reload(1);
+// }, 120000);  // After 5 secs
+// document.getElementById('orderVariant').addEventListener('change', function() {
+//   const orderVariant = this.value;
+//   const priceField = document.getElementById('priceField');
+//   const triggerPriceField = document.getElementById('triggerPriceField');
+  
+//   if (orderVariant === 'MARKET') {
+//     priceField.style.display = 'none';
+//     triggerPriceField.style.display = 'none';
+//   } else if (orderVariant === 'SL' || orderVariant === 'SL-M') {
+//     priceField.style.display = 'block';
+//     triggerPriceField.style.display = 'block';
+//     if (orderVariant === 'SL-M') {
+//       document.getElementById('strikePrice').placeholder = 'Market price will be used';
+//     }
+//   } else { // LIMIT order
+//     priceField.style.display = 'block';
+//     triggerPriceField.style.display = 'none';
+//   }
+// });
+
+$(document).ready(function() {
+  // Handle click on strike price
+  $('.place_order').click(function(e) {
+    alert("Place Order Clicked");
+    e.preventDefault();
+    $("#tradingsymbol_id").text($(this).data('tradingsymbol'))
+    const instrument = $(this).data('instrument')
+    const lot_size = $(this).data('lot_size')
+    $('#quantity').val(lot_size);
+    $('#option_type').val($(this).data('option_type'));
+
+    // Get quote data from Zerodha API using instrument token
+    $.ajax({
+      url: "{% url 'api_get_quote' %}",
+      method: 'GET', 
+      data: {
+        instrument: instrument,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+      },
+      success: function(response) {
+        if(response.success) {
+          // Update strike price input with last traded price
+          $('#strikePrice').val(response.instrument_data.last_price);
+          $('#cash_margin').text(response.equity_margins.available.cash);
+          $('#instrumentToken').val(response.instrument_data.instrument_token);
+        } else {
+          console.error('Error fetching quote:', response.error);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('API call failed:', error);
+      }
+    });
+    // Get the strike price from the clicked cell
+    // const strikePrice = $(this).text().trim();
+    // const rowData = $(this).closest('tr').data('row'); 
+    $('#instrumentModal').modal("show");
+
+  })
+  
+})
+
+// place order
+// Handle place order button click
+$('#placeOrderBtn').click(function() { 
+      const tradingsymbol = $("#tradingsymbol_id").text();
+      const price = $("#strikePrice").val();
+      const orderType = $("#orderType").val();
+      const quantity = $("#quantity").val();
+      const productType = $("#productType").val();
+      const orderVariant = $("#orderVariant").val();
+      const triggerPrice = $("#triggerPrice").val();
+      
+      // Validate inputs
+      if (orderVariant !== 'MARKET' && !price) {
+          alert('Please enter a price');
+          return;
+      }
+      
+      if ((orderVariant === 'SL' || orderVariant === 'SL-M') && !triggerPrice) {
+          alert('Please enter a trigger price');
+          return;
+      }
+      
+      // Disable button to prevent multiple clicks
+      $(this).prop('disabled', true);
+      $(this).text('Placing Order...');
+      
+      // Prepare order data
+      const orderData = {
+          tradingsymbol: tradingsymbol,
+          price: orderVariant === 'MARKET' ? 0 : price,
+          order_type: orderType,
+          quantity: quantity,
+          product_type: productType,
+          order_variant: orderVariant,
+          trigger_price: triggerPrice,
+          instrument_token: $('#instrumentToken').val(),
+          option_type: $('#option_type').val(),
+
+          parent_symbol: $('#paraent_symbol').val(),
+          symbol_instrument : '{{ symbol_instrument }}',
+          symbol_price: $('#symbol_price').val(),
+          strategy_type: $('input[name="strategy_type"]:checked').val(),
+          use_parent_symbol: $('#use_parent_symbol').is(':checked') ? '1' : '0', 
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+      };
+      
+      // Send AJAX request to place orde
+      $.ajax({
+          url: "{% url 'api_place_order' %}",
+          type: "POST",
+          data: orderData,
+          success: function(response) {
+              if(response.success) {
+                  
+                  alert('Order placed successfully! Order ID: ' + response.order_id); 
+                  $('#instrumentModal').modal('hide');
+              } else {
+                  alert('Error: ' + response.error);
+              }
+          },
+          error: function(xhr, status, error) {
+              alert('Error placing order: ' + error);
+          },
+          complete: function() {
+              $('#placeOrderBtn').prop('disabled', false);
+              $('#placeOrderBtn').text('Place Order');
+          }
+      });
+  });
+
+
+  $('.stike').click(function(e) {
+    e.preventDefault();
+    //alert('Strike Price: ' + $(this).data('strike') + '\nSymbol: ' + $(this).data('symbol') + '\nDate: ' + $(this).data('date') + '\nTime: ' + $(this).data('time'));
+    $("#strike_number_id").text("Strike Price:" +  $(this).data('strike'));
+    $.ajax({
+      url: "{% url 'api_get_oi_data' %}",
+      method: 'GET', 
+      data: {
+        symbol: $(this).data('symbol'),
+        strike: $(this).data('strike'),
+        date: $(this).data('date'),
+        time: $(this).data('time'),
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+      },
+      success: function(response) {
+        if (response) {
+          
+          // Prepare data for Chart.js
+          const labels = response.map(entry => entry.time);
+          const callCoiData = response.map(entry => entry.call_coi);
+          const putCoiData = response.map(entry => entry.put_coi);
+          const priceData = response.map(entry => entry.call_current_price); // Assuming you have price data
+
+          // create plotly chart
+          const trace1 = {
+            x: labels,
+            y: callCoiData,
+            type: 'scatter',
+            name: 'Call COI',
+            marker: { color: 'green' }
+          };  
+          
+          // add price chart as line
+          const trace3 = {
+            x: labels,
+            y: priceData,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Price',
+            line: { color: 'blue', width: 2 },
+            yaxis: 'y2' // Use secondary y-axis for price
+          };
+
+          const data = [trace1,  trace3];
+          const layout = {
+            title: 'COI Data for Strike ' + $(this).data('strike'),
+            xaxis: { title: 'Time' },
+            yaxis: { 
+              title: 'COI',
+              side: 'right'
+            },
+            yaxis2: {
+              title: 'Price',
+              side: 'left',
+              overlaying: 'y',
+              showgrid: false // Optional: reduce grid lines for better readability
+            }
+          };
+          Plotly.newPlot('strikeChart', data, layout);
+
+          // for put COI chart
+          const trace2 = {
+            x: labels,
+            y: putCoiData,
+            type: 'scatter',
+            name: 'Put COI',
+            marker: { color: 'red' }
+          };
+          const data2 = [trace2,  trace3];
+          const layout2 = {
+            title: 'COI Data for Strike ' + $(this).data('strike'),
+            xaxis: { title: 'Time' },
+            yaxis: { 
+              title: 'COI',
+              side: 'right'
+            },
+            yaxis2: {
+              title: 'Price',
+              side: 'left',
+              overlaying: 'y',
+              showgrid: false // Optional: reduce grid lines for better readability
+            }
+          };
+
+          Plotly.newPlot('strikeChart2', data2, layout2);
+          
+          
+        } else {
+          console.error('Error fetching OI data');
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('API call failed:', error);
+      }
+    });
+
+    $('#chartstrikeModal').modal("show");
+
+  })
+</script>
+
+</body>
+
+</html>

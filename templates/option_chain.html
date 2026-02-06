@@ -1,0 +1,141 @@
+{% extends 'base.html' %} {% load static %} {% load custom_filters %}
+
+{% block inner_html %}
+
+
+    <!-- Page Title -->
+    <div class="page-title" data-aos="fade" style="padding: 5px 0px !important;">
+      <div class="container justify-content-between align-items-center">
+        {% if df.empty %}
+        <h1 class="" style="color: red;">{{ error }} </h1>
+       {% else %}
+        <h1 class=""><b>{{ stock_name }} - {{ current_price }} </b></h1>
+        {% endif %}
+        
+        
+      </div>
+    </div><!-- End Page Title -->
+
+    
+    <!-- Starter Section Section -->
+    <section id="" class="starter-section " style="padding: 10px 0px !important;">
+
+       
+
+      <div class="container" data-aos="fade-up">
+    <form name="frm" id="frm_ption" method="get" action="{% url 'option_chain' stock_name %}">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label>Expiray Date: </label>
+                <select name="expiry" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in expirations %}
+                    <option {% if date == expiry  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Symbol: <span style="color: green;font-weight: bold;"></span></label> 
+              <select name="symbol" class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol.name == stock_name %} selected {% endif %} value="{% url 'option_chain' symbol.name %}">{{ symbol.name }}</option>
+                {% endfor %}
+            </select>
+            </div>
+      
+      </div>
+    </form>
+      <div class="table-responsive" style="font-size: 12px;">
+        <table class="table table-responsive ">
+          <thead>
+            <tr>
+              <th colspan="7" style="background-color: #3a2c7d;" class="text-center  text-white">CALLS</th>
+              <th style="background-color: #3a2c7d;" class="text-center  text-white"></th>
+              <th colspan="7" style="background-color: #3a2c7d;" class="text-center  text-white">PUTS</th>
+            </tr>
+            
+            <tr>
+              <th style="background-color: #3a2c7d;color: aliceblue;">OI</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Volume</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">IV</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Last Price</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">% Change</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;" class="text-center">strike</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Bid</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Ask</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">% Change</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Last Price</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">IV</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">Volume</th>
+              <th style="background-color: #3a2c7d;color: aliceblue;">OI</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+                 {% for index, row in df.iterrows %}
+
+            <tr {% if row|get_item:"strike" == current_price %}class="table-warning"{% endif %}>
+                
+                
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %} 
+              {% if row|get_item:"openInterest_x" == max_oi_x %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+              {% if row|get_item:"openInterest_x" == second_largest_oi_x %} style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+              >
+                
+                {{ row.loc.openInterest_x|floatformat:0 }}</td>
+              
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}{% if row|get_item:"volume_x" == max_volume_x %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+              {% if row|get_item:"volume_x" == second_largest_volume_x %} style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+              >
+                {{ row|get_item:"volume_x"|floatformat:0 }}
+              </td>
+
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row|get_item:"impliedVolatility_x"|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.lastPrice_x|floatformat:0 }}</td>
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.percentChange_x|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.bid_x|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" < current_price %} style="background-color: #f2eed9;" {% endif %}>{{ row.ask_x|floatformat:2 }}</td>
+             
+             
+              <td class="text-center fw-bold" ; style="background-color: aqua;"">{{ row|get_item:"strike"|floatformat:2 }} </td>
+             
+             
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.bid_y|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %}  >{{ row.ask_y|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.percentChange_y|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.lastPrice_y|floatformat:2 }}</td>
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} >{{ row.impliedVolatility_y|floatformat:0 }}</td>
+              
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %}{% if row|get_item:"volume_y" == max_volume_y %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+                {% if row|get_item:"volume_y" == second_largest_volume_y %}  style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+                 >
+                {{ row|get_item:"volume_y"|floatformat:2 }}
+              </td>
+
+
+              <td {% if row|get_item:"strike" > current_price %} style="background-color: #f2eed9;" {% endif %} 
+                {% if row|get_item:"openInterest_y" == max_oi_y %} style="background-color: #ffeb3b; font-weight: bold;" {% endif %}
+                {% if row|get_item:"openInterest_y" == second_largest_oi_y %}  style="background-color:rgb(216, 204, 204); font-weight: bold;" {% endif %}
+                >{{ row|get_item:"openInterest_y"|floatformat:0 }}</td>
+             
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      </div> 
+
+       
+      
+
+    </section><!-- /Starter Section Section -->
+
+
+<script>
+    setTimeout(function () {
+    window.location.reload(1);
+}, 120000);  // After 5 secs
+</script>
+{% endblock %} 

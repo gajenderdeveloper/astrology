@@ -1,0 +1,27 @@
+<div class="table-container">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th  class="text-center">Favorite</th>
+                                </tr>
+                                <tr>
+                                    <th>Symbol</th>
+                                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for index, row in favorite.iterrows %}
+                                <tr>
+                                     
+                                    <td>
+                                        <a data-symbol="{{row.symbol}}" href="javascript:void(0);" class="stock-symbol-link">{{row.symbol}}
+                                        </a>
+                                        </td>
+                                   
+                                    
+                                </tr>
+                                {% endfor %}
+                                
+                            </tbody>
+                        </table>
+                    </div>

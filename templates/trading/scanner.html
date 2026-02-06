@@ -1,0 +1,233 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label> Date Time: </label>
+                <select name="created_date" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in date_unique %}
+                    <option {% if date == created_date  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'oi_option' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div> -->
+           
+            
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+        
+            <table  id="id_scanner" class="table table-striped sticky-table">
+                <thead>
+                <tr>
+                    
+                    <th scope="col">Symbol</th>
+                    <th scope="col">open</th>
+                    <th scope="col">low</th>
+                    <th scope="col">high</th>
+
+                    <th scope="col">close</th>
+                    <th scope="col">ema</th>
+                    <th scope="col">ema type</th>
+                    <th scope="col">Date</th>
+                   
+                    
+                    <!-- <th scope="col">Trade</th> -->
+                </tr>
+                </thead>
+                <tbody>
+                {% for index, row in df.iterrows %}
+                <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                   
+                    <td><a target="_blank" href="{% url 'oi_option' row.symbol %}">{{ row.symbol }}</a></td>
+                    <td>{{ row.open }}</td>
+                    <td>{{ row.low }}</td>
+                    <td>{{ row.high|floatformat:2 }}</td>
+
+                    <td>{{ row.close|floatformat:2 }}</td>
+                    <td>{{ row.ema|floatformat:2 }}</td>
+                    <td>{{ row.ema_type }}</td>
+                    <td>{{ row.date }}</td>
+       
+                    <!-- <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#instrumentModal" data-symbol="{{ row.tradingsymbol }}">Trade</button></td> -->
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </td>
+           
+           
+           
+            </table>
+          
+        
+        </div>
+      </div>
+    </div> 
+</section><!-- /Starter Section Section -->
+
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">{{ symbol_name }} Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tradingview-chart-container" style="width: 100%; height: 600px;">
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+           
+            <span id="tradingsymbol_id"></span>
+        </div>
+        <div style="margin-left: 20px;">
+            <h5 class="modal-title d-inline" id="instrumentModalLabel">Cash: </h5>
+            <span id="cash_margin"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="strikePrice" class="form-label">Price</label>
+                <input type="text" class="form-control" id="strikePrice">
+              </div>
+           
+              <div class="mb-3">
+                <label for="orderType" class="form-label">Transaction Type</label>
+                <select class="form-select" id="orderType">
+                  <option value="BUY">BUY</option>
+                  <option value="SELL">SELL</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" value="" step="any">
+              </div>
+              <div class="mb-3">
+                <label for="productType" class="form-label">Product Type</label>
+                <select class="form-select" id="productType">
+                  <option value="NRML">NRML</option>
+                  <option value="MIS">MIS</option>
+                  
+                  <option value="CNC">CNC</option>
+                </select>
+              </div>
+              
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="orderVariant" class="form-label">Order Variant</label>
+                <select class="form-select" id="orderVariant">
+                  <option value="LIMIT">Limit</option>
+                  <option value="MARKET">Market</option>
+                  <option value="SL">Stop Loss</option>
+                  <option value="SL-M">Stop Loss Market</option>
+                </select>
+              </div>
+              
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3" id="triggerPriceField" style="display: none;">
+                <label for="triggerPrice" class="form-label">Trigger Price</label>
+                <input type="text" class="form-control" id="triggerPrice">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+      $('#id_scanner').DataTable({
+          "pageLength": 25,
+          "order": [], // Disable initial sorting
+          "scrollX": true,
+          "scrollY": "500px",
+          "scrollCollapse": true,
+          "paging": true,
+          "searching": true,
+          "info": true,
+          "language": {
+              "search": "Search:",
+              "lengthMenu": "Show _MENU_ entries",
+              "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+              "paginate": {
+                  "first": "First",
+                  "last": "Last", 
+                  "next": "Next",
+                  "previous": "Previous"
+              }
+          }
+      });
+  });
+</script>
+{% endblock %}

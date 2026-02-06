@@ -1,0 +1,68 @@
+{% extends 'base.html' %} {% load static %} 
+
+{% block inner_html %}
+
+
+
+<main class="main">
+
+  <!-- Page Title -->
+  <div class="page-title" data-aos="fade">
+    <div class="container d-lg-flex justify-content-between align-items-center">
+      <h1 class="mb-2 mb-lg-0">Appointment</h1>
+      <nav class="breadcrumbs">
+        <ol>
+          <li><a href="index.html">Home</a></li>
+          <li class="current">Appointment</li>
+        </ol>
+      </nav>
+    </div>
+  </div><!-- End Page Title -->
+
+  <!-- Starter Section Section -->
+  <section id="starter-section" class="starter-section section">
+
+    <!-- Section Title -->
+    
+    <div class="container">
+
+      <div class="row gy-4 pricing">
+
+        <div class="col-lg-8 border mx-1 p-2 pricing-item blog-comments" data-aos="fade-up" data-aos-delay="200">
+          
+            <h5 class="text-dark">Summary</h5>
+            
+          <hr>
+          <p>Customer : Name</p>
+          <p>Date & Time : 01/10/2024, 8:50 am - 9:20 am</p>
+          <p>Service : MEDICAL ASTROLOGY CONSULTATION </p>
+          <p>Total Amount Payable : ₹5,000</p>
+
+          <div class="text-center header">
+            <a class="btn-block  btn-lg" href="basic-details.html"><i class="bi bi-arrow-left"></i> Go Back</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <a class="btn-getstarted  btn-lg">Confirm Appointment</a>
+          </div>
+
+        </div>
+
+        <div class="col-lg-3 border p-2 pricing-item" data-aos="fade-up" data-aos-delay="100">
+          <a class="icon-link" href="{% url 'appointment' %}"> <i class="bi bi-calendar-date"></i> Date & Time [INDIAN TIME ZONE]</a>
+          <a class="icon-link" href="{% url 'basic-details' %}"><i class="bi bi-card-checklist"></i>Basic details</a>
+          <a class="icon-link" href="{% url 'summary' %}"><i class="bi bi-calendar-check"></i>Summary</a>
+         </div>
+
+      </div>
+
+    </div>
+    
+    <!-- End Section Title -->
+
+   
+
+  </section><!-- /Starter Section Section -->
+
+</main>
+
+{% endblock %} 
+
+

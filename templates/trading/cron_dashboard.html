@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cron Job Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-clock"></i> Cron Job Dashboard
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="refreshStatus()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Job Status Overview -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="info-box bg-info">
+                                <span class="info-box-icon"><i class="fas fa-play"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Active Jobs</span>
+                                    <span class="info-box-number" id="active-jobs">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-success">
+                                <span class="info-box-icon"><i class="fas fa-check"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Successful Runs</span>
+                                    <span class="info-box-number" id="successful-runs">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-warning">
+                                <span class="info-box-icon"><i class="fas fa-exclamation"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Failed Runs</span>
+                                    <span class="info-box-number" id="failed-runs">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-secondary">
+                                <span class="info-box-icon"><i class="fas fa-clock"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Total Jobs</span>
+                                    <span class="info-box-number" id="total-jobs">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jobs Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Job Name</th>
+                                    <th>Function</th>
+                                    <th>Schedule</th>
+                                    <th>Status</th>
+                                    <th>Last Run</th>
+                                    <th>Next Run</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobs-table-body">
+                                {% for job in jobs %}
+                                <tr data-job-id="{{ job.id }}">
+                                    <td>{{ job.name }}</td>
+                                    <td><code>{{ job.function_path }}</code></td>
+                                    <td><span class="badge badge-info">{{ job.cron_schedule }}</span></td>
+                                    <td>
+                                        <span class="badge badge-{{ job.status|yesno:'success,warning,danger' }}">
+                                            {{ job.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if job.last_run %}
+                                            {{ job.last_run|date:"M d, Y H:i:s" }}
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if job.next_run %}
+                                            {{ job.next_run|date:"M d, Y H:i:s" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary run-job-btn" 
+                                                data-job-id="{{ job.id }}" 
+                                                data-job-name="{{ job.name }}">
+                                            <i class="fas fa-play"></i> Run Now
+                                        </button>
+                                        <a href="/admin/trading/cronjob/{{ job.id }}/change/" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">
+                                        No cron jobs found. 
+                                        <a href="/admin/trading/cronjob/add/">Create one</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Recent Executions -->
+                    <div class="mt-4">
+                        <h5><i class="fas fa-history"></i> Recent Executions</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Job</th>
+                                        <th>Started</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Output</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for execution in recent_executions %}
+                                    <tr>
+                                        <td>{{ execution.job.name }}</td>
+                                        <td>{{ execution.started_at|date:"M d, Y H:i:s" }}</td>
+                                        <td>
+                                            {% if execution.duration %}
+                                                {{ execution.duration }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-{{ execution.status|yesno:'success,danger,warning' }}">
+                                                {{ execution.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if execution.output %}
+                                                <button class="btn btn-sm btn-outline-info" 
+                                                        onclick="showOutput('{{ execution.output|escapejs }}')">
+                                                    View Output
+                                                </button>
+                                            {% endif %}
+                                            {% if execution.error_message %}
+                                                <button class="btn btn-sm btn-outline-danger" 
+                                                        onclick="showError('{{ execution.error_message|escapejs }}')">
+                                                    View Error
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            No executions found
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Output Modal -->
+<div class="modal fade" id="outputModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Job Output</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="output-content"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Error Details</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <pre id="error-content"></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function runJob(jobId, jobName) {
+    if (!confirm(`Are you sure you want to run "${jobName}" now?`)) {
+        return;
+    }
+    
+    const button = $(`.run-job-btn[data-job-id="${jobId}"]`);
+    const originalText = button.html();
+    
+    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Running...');
+    
+    $.ajax({
+        url: `/trading/cron/job/${jobId}/run/`,
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(response) {
+            if (response.success) {
+                toastr.success(response.message);
+                setTimeout(() => refreshStatus(), 1000);
+            } else {
+                toastr.error('Job failed: ' + response.error);
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON || {};
+            toastr.error('Error running job: ' + (response.error || 'Unknown error'));
+        },
+        complete: function() {
+            button.prop('disabled', false).html(originalText);
+        }
+    });
+}
+
+function refreshStatus() {
+    $.get('/trading/cron/status/', function(data) {
+        // Update overview stats
+        let activeJobs = 0, successfulRuns = 0, failedRuns = 0;
+        
+        data.jobs.forEach(function(job) {
+            if (job.is_enabled) activeJobs++;
+            successfulRuns += job.success_count;
+            failedRuns += job.failed_count;
+        });
+        
+        $('#active-jobs').text(activeJobs);
+        $('#successful-runs').text(successfulRuns);
+        $('#failed-runs').text(failedRuns);
+        $('#total-jobs').text(data.jobs.length);
+        
+        // Update job status in table
+        data.jobs.forEach(function(job) {
+            const row = $(`tr[data-job-id="${job.id}"]`);
+            if (row.length) {
+                const statusCell = row.find('td:nth-child(4)');
+                const statusClass = job.status === 'active' ? 'success' : 
+                                  job.status === 'inactive' ? 'warning' : 'danger';
+                statusCell.html(`<span class="badge badge-${statusClass}">${job.status}</span>`);
+            }
+        });
+    });
+}
+
+function showOutput(output) {
+    $('#output-content').text(output);
+    $('#outputModal').modal('show');
+}
+
+function showError(error) {
+    $('#error-content').text(error);
+    $('#errorModal').modal('show');
+}
+
+// Event handlers
+$(document).ready(function() {
+    $('.run-job-btn').click(function() {
+        const jobId = $(this).data('job-id');
+        const jobName = $(this).data('job-name');
+        runJob(jobId, jobName);
+    });
+    
+    // Auto-refresh every 30 seconds
+    setInterval(refreshStatus, 30000);
+});
+</script>
+{% endblock %} 

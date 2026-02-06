@@ -1,0 +1,133 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #39745d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            <div class="col-md-2">
+                <label> Date Time: </label>
+                <select name="created_date" class="form-select" id="expirationDate" onchange="this.form.submit()">
+                    {% for date in date_unique %}
+                    <option {% if date == created_date  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'oi_option' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div> -->
+           
+            
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+        
+            <table  id="id_scanner" class="table table-striped sticky-table">
+                <thead>
+                <tr>
+                    
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Total Voumne Call</th>
+                    <th scope="col">Total Volume PUT</th>
+                    <th scope="col">Total COI Call</th>
+
+                    <th scope="col">Total Change In OI Put</th>
+                   
+                    
+                    <!-- <th scope="col">Trade</th> -->
+                </tr>
+                </thead>
+                <tbody>
+                {% for index, row in df.iterrows %}
+                <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                   
+                    <td><a target="_blank" href="{% url 'oi_option' row.symbol %}">{{ row.symbol }}</a></td>
+                    <td>{{ row.total_volume_call }}</td>
+                    <td>{{ row.total_volume_put }}</td>
+                    <td>{{ row.total_coi_call|floatformat:2 }}</td>
+
+                    <td>{{ row.total_coi_put|floatformat:2 }}</td>
+       
+                    <!-- <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#instrumentModal" data-symbol="{{ row.tradingsymbol }}">Trade</button></td> -->
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </td>
+           
+            <table  id="id_scanner" class="table table-striped sticky-table">
+                <thead>
+                <tr>
+                    
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Total Voumne Call</th>
+                    <th scope="col">Total Volume PUT</th>
+                    <th scope="col">Total Change In OI Call</th>
+
+                    <th scope="col">Total Change In OI Put</th>
+                   
+                    
+                    <!-- <th scope="col">Trade</th> -->
+                </tr>
+                </thead>
+                <tbody>
+                {% for index, row in df_put.iterrows %}
+                <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
+                   
+                    <td><a target="_blank" href="{% url 'oi_option' row.symbol %}">{{ row.symbol }}</a></td>
+                    <td>{{ row.total_volume_call }}</td>
+                    <td>{{ row.total_volume_put }}</td>
+                    <td>{{ row.total_coi_call|floatformat:2 }}</td>
+
+                    <td>{{ row.total_coi_put|floatformat:2 }}</td>
+       
+                    <!-- <td><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#instrumentModal" data-symbol="{{ row.tradingsymbol }}">Trade</button></td> -->
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+           
+            </table>
+          
+        
+        </div>
+      </div>
+    </div> 
+</section><!-- /Starter Section Section -->
+
+
+{% endblock %}

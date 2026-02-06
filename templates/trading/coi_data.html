@@ -1,0 +1,480 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load custom_filters %}
+
+{% block inner_html %}
+<style>
+  /* Container for the table with fixed height and scroll */
+  .table-container {
+    height: 600px; /* Adjust height as needed */
+    overflow-y: auto;
+    position: relative;
+  }
+  
+  /* Sticky header styling */
+  table thead tr th {
+   
+    background-color: #3a2c7d !important; /* Ensure background covers content */
+    color: white !important;
+  }
+  
+  /* Ensure header cells have consistent padding */
+  
+</style>
+<style>
+  .sticky-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .sticky-table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.4);
+  }
+  
+  .sticky-table-container {
+    height: 700px; /* Set your desired height */
+    overflow: auto;
+  }
+</style>
+<!-- Starter Section Section -->
+<section id="" class="starter-section " style="padding: 10px 0px !important;">
+    <div class="container" data-aos="fade-up">
+      <div class="section-header" >
+        <form name="frm" id="frm_ption" method="get" action="">  
+      <div class="row mb-4">
+        
+            
+            <div class="col-md-2">
+                <label>Symbol: </label> 
+            <select class="form-select" id="optionType" onchange="window.location.href=this.value">
+                {% for symbol in symbol_list %}
+                <option {% if symbol_name == symbol  %} selected {% endif %}  value="{% url 'option_chain_coi' symbol %}" data-symbol="">{{ symbol }}</option>
+            
+                {% endfor %}
+            </select>
+            </div>
+            <div class="col-md-2">
+                <label>Date: </label>
+                <select name="date" class="form-select" id="dateid" onchange="submitform(this.value)">
+                    {% for date in date_list %}
+                    <option {% if date == date_str  %} selected {% endif %} value="{{ date }}">{{ date }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Time: </label>
+                <select name="time" class="form-select" id="timeid" onchange="this.form.submit()">
+                    {% for time in time %}
+                    <option {% if time == time_selected  %} selected {% endif %} value="{{ time }}">{{ time }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-primary mt-4" onclick="javascript:location.reload()" >
+                    Refresh
+                </button>
+            </div>
+            <div class="col-md-4"
+                hx-get="{% url 'get_current_time' %}"
+                hx-trigger="load, every 1s"
+            >
+            <!-- <div class="col-md-2">
+                <button type="button" class="btn btn-primary mt-4" data-bs-toggle="modal" data-bs-target="#chartModal">
+                    View Chart
+                </button>
+            </div> -->
+
+            
+      </div>
+    </form>
+      </div>
+    
+      <div class="table-responsive " style="position: relative; font-size: 12px;">
+         <div class="table-responsive sticky-table-container">
+        <table class="table table-bordered table-container sticky-table"  >
+        <thead >
+              <tr style="background-color: #3a2c7d;">
+                <th colspan="7" class="text-center text-white">CALLS</th>
+                <th class="text-center text-white">Price: {{ current_price }}</th>
+                <th colspan="7" class="text-center text-white">PUTS</th>
+              </tr>
+              
+              <tr style=" background-color: #3a2c7d;">
+              
+                <th style="color: aliceblue;">OI</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">Day Open</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">LTP</th>
+
+                <th class="text-center" style="color: aliceblue;">Strike</th>
+
+                <th style="color: aliceblue;">LTP</th>
+                <th style="color: aliceblue;">Day High</th>
+                <th style="color: aliceblue;">Day Low</th>
+                <th style="color: aliceblue;">Day Open</th>
+                <th style="color: aliceblue;">Volume</th>
+                <th style="color: aliceblue;">COI</th>
+                <th style="color: aliceblue;">OI</th>
+               
+              </tr>
+            </thead>
+          <tbody>
+            
+                 {% for index, row in df.iterrows %}
+
+                  
+                 
+                 
+                 <tr {% if row|get_item:"strike" == current_price %}class="table-warning"{% endif %}>
+
+                 
+                   <td style = "{{ row.CE_color_total_oi }}" >
+                    {{ row.loc.call_oi| indian_notation }}
+                  </td>
+                   <td style = "{{ row.CE_color_change_in_oi }}" >
+                    {{ row.loc.call_coi| indian_notation }}
+                   </td>
+
+                   
+                   <td style = "{{ row.CE_color_volume }}">
+                    {{ row|get_item:"call_volume"|indian_notation }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_open" }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_low" }}
+                  </td>
+                   <td style = "{{ row.CE_color }}">
+                    {{ row|get_item:"call_day_high"}}
+                  </td>
+               
+                   <td style = "{{ row.CE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                         data-lot_size="{{ row|get_item:'CE_lot_size'}}"
+                        data-instrument="{{ row|get_item:'CE_instrument_token'}}"
+                        data-tradingsymbol="{{ row|get_item:'CE_tradingsymbol' }}">
+                    {{ row|get_item:"call_current_price"|floatformat:2 }}
+                    </a>
+                  </td>
+
+
+                  
+                   <td class="text-center fw-bold"; style="background-color: #FFD580;"">
+                    {{ row|get_item:"strike"| indian_notation }}
+                  </td>
+
+                   <td style = "{{ row.PE_color }}">
+                    <a href="#" class="text-center fw-bold place_order" 
+                    data-lot_size="{{ row|get_item:'PE_lot_size'}}"
+                   data-instrument="{{ row|get_item:'PE_instrument_token'}}"
+                   data-tradingsymbol="{{ row|get_item:'PE_tradingsymbol' }}">
+                   {{ row.put_current_price|floatformat:2 }}
+                  </a>
+                   </td>
+
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_high"}}
+                    </td>
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_low"}}
+                    </td>
+                    <td style = "{{ row.PE_color }}">
+                    {{ row|get_item:"put_day_open"}}
+                    </td>
+
+                    <td style = "{{ row.PE_color_volume }}">
+                    {{ row|get_item:"put_volume"|indian_notation }}
+                  </td>
+                  
+
+                  <td style="{{ row.PE_color_change_in_oi }}"  >{{ row.loc.put_coi| indian_notation }}</td>
+
+                   <td style="{{ row.PE_color_total_oi}}">{{ row|get_item:"put_oi"| indian_notation }}</td> 
+
+                  
+                  
+                 </tr>
+                 
+                 
+                 
+                
+                 {% endfor %}
+          </tbody>
+        </table>
+        </div>
+      </div>
+      </div> 
+</section><!-- /Starter Section Section -->
+
+<!-- Chart Modal -->
+<div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="chartModalLabel">{{ symbol_name }} Chart</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="tradingview-chart-container" style="width: 100%; height: 600px;">
+         
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Modal -->
+<div class="modal fade" id="instrumentModal" tabindex="-1" aria-labelledby="instrumentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+           
+            <span id="tradingsymbol_id"></span>
+        </div>
+        <div style="margin-left: 20px;">
+            <h5 class="modal-title d-inline" id="instrumentModalLabel">Cash: </h5>
+            <span id="cash_margin"></span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+      <div class="modal-body">
+        <form id="orderForm">
+          <input type="hidden" id="instrumentToken" value="">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3" id="priceField">
+                <label for="strikePrice" class="form-label">Price</label>
+                <input type="text" class="form-control" id="strikePrice">
+              </div>
+           
+              <div class="mb-3">
+                <label for="orderType" class="form-label">Transaction Type</label>
+                <select class="form-select" id="orderType">
+                  <option value="BUY">BUY</option>
+                  <option value="SELL">SELL</option>
+                </select>
+              </div>
+
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="quantity" class="form-label">Quantity</label>
+                <input type="number" class="form-control" id="quantity" value="" step="any">
+              </div>
+              <div class="mb-3">
+                <label for="productType" class="form-label">Product Type</label>
+                <select class="form-select" id="productType">
+                  <option value="NRML">NRML</option>
+                  <option value="MIS">MIS</option>
+                  
+                  <option value="CNC">CNC</option>
+                </select>
+              </div>
+              
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="orderVariant" class="form-label">Order Variant</label>
+                <select class="form-select" id="orderVariant">
+                  <option value="LIMIT">Limit</option>
+                  <option value="MARKET">Market</option>
+                  <option value="SL">Stop Loss</option>
+                  <option value="SL-M">Stop Loss Market</option>
+                </select>
+              </div>
+              
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3" id="triggerPriceField" style="display: none;">
+                <label for="triggerPrice" class="form-label">Trigger Price</label>
+                <input type="text" class="form-control" id="triggerPrice">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitform(value) {
+    const date = document.getElementById('dateid').value;
+    const time = document.getElementById('timeid').value;
+    url = "{% url 'option_chain_coi' symbol_name %}?date=" + date ;
+    window.location = url
+}
+
+
+//     setTimeout(function () {
+//     window.location.reload(1);
+// }, 120000);  // After 5 secs
+document.getElementById('orderVariant').addEventListener('change', function() {
+  const orderVariant = this.value;
+  const priceField = document.getElementById('priceField');
+  const triggerPriceField = document.getElementById('triggerPriceField');
+  
+  if (orderVariant === 'MARKET') {
+    priceField.style.display = 'none';
+    triggerPriceField.style.display = 'none';
+  } else if (orderVariant === 'SL' || orderVariant === 'SL-M') {
+    priceField.style.display = 'block';
+    triggerPriceField.style.display = 'block';
+    if (orderVariant === 'SL-M') {
+      document.getElementById('strikePrice').placeholder = 'Market price will be used';
+    }
+  } else { // LIMIT order
+    priceField.style.display = 'block';
+    triggerPriceField.style.display = 'none';
+  }
+});
+
+$(document).ready(function() {
+  // Handle click on strike price
+  $('.place_order').click(function(e) {
+    e.preventDefault();
+    $("#tradingsymbol_id").text($(this).data('tradingsymbol'))
+    const instrument = $(this).data('instrument')
+    const lot_size = $(this).data('lot_size')
+    $('#quantity').val(lot_size);
+    // Get quote data from Zerodha API using instrument token
+    $.ajax({
+      url: "{% url 'api_get_quote' %}",
+      method: 'GET', 
+      data: {
+        instrument: instrument,
+        csrfmiddlewaretoken: '{{ csrf_token }}'
+      },
+      success: function(response) {
+        if(response.success) {
+          // Update strike price input with last traded price
+          $('#strikePrice').val(response.instrument_data.last_price);
+          $('#cash_margin').text(response.equity_margins.available.cash);
+          $('#instrumentToken').val(response.instrument_data.instrument_token);
+        } else {
+          console.error('Error fetching quote:', response.error);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('API call failed:', error);
+      }
+    });
+    // Get the strike price from the clicked cell
+    // const strikePrice = $(this).text().trim();
+    // const rowData = $(this).closest('tr').data('row'); 
+    $('#instrumentModal').modal("show");
+
+  })
+  
+  // Initialize TradingView chart when modal is shown
+  $('#chartModal').on('shown.bs.modal', function () {
+    // load tradingview widget
+    // if (typeof TradingView !== 'undefined') {
+    //   new TradingView.widget({
+    //     "autosize": true,
+    //     "symbol": "NASDAQ:AAAPL",
+    //     "interval": "D",
+    //     "timezone": "Asia/Kolkata",
+    //     "theme": "light",
+    //     "style": "1",
+    //     "locale": "en",
+    //     "toolbar_bg": "#f1f3f6",
+    //     "enable_publishing": false,
+    //     "hide_top_toolbar": false,
+    //     "hide_side_toolbar": false,
+    //     "allow_symbol_change": true,
+    //     "container_id": "tradingview-chart-container",
+    //     "overrides": {
+    //             "symbolWatermarkProperties.color": "rgba(0, 0, 0, 0)"
+    //         },
+    //         "studies_overrides": {},
+    //         "futures": true
+    //   });
+    // } else {
+    //   console.error("TradingView widget library not loaded");
+    // }
+  });
+})
+
+// place order
+// Handle place order button click
+$('#placeOrderBtn').click(function() { 
+      const tradingsymbol = $("#tradingsymbol_id").text();
+      const price = $("#strikePrice").val();
+      const orderType = $("#orderType").val();
+      const quantity = $("#quantity").val();
+      const productType = $("#productType").val();
+      const orderVariant = $("#orderVariant").val();
+      const triggerPrice = $("#triggerPrice").val();
+      
+      // Validate inputs
+      if (orderVariant !== 'MARKET' && !price) {
+          alert('Please enter a price');
+          return;
+      }
+      
+      if ((orderVariant === 'SL' || orderVariant === 'SL-M') && !triggerPrice) {
+          alert('Please enter a trigger price');
+          return;
+      }
+      
+      // Disable button to prevent multiple clicks
+      $(this).prop('disabled', true);
+      $(this).text('Placing Order...');
+      
+      // Prepare order data
+      const orderData = {
+          tradingsymbol: tradingsymbol,
+          price: orderVariant === 'MARKET' ? 0 : price,
+          order_type: orderType,
+          quantity: quantity,
+          product_type: productType,
+          order_variant: orderVariant,
+          trigger_price: triggerPrice,
+          instrument_token: $('#instrumentToken').val(),
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+      };
+      
+      // Send AJAX request to place order
+      $.ajax({
+          url: "{% url 'api_place_order' %}",
+          type: "POST",
+          data: orderData,
+          success: function(response) {
+              if(response.success) {
+                  
+                  alert('Order placed successfully! Order ID: ' + response.order_id); 
+                  $('#instrumentModal').modal('hide');
+              } else {
+                  alert('Error: ' + response.error);
+              }
+          },
+          error: function(xhr, status, error) {
+              alert('Error placing order: ' + error);
+          },
+          complete: function() {
+              $('#placeOrderBtn').prop('disabled', false);
+              $('#placeOrderBtn').text('Place Order');
+          }
+      });
+  });
+</script>
+{% endblock %}

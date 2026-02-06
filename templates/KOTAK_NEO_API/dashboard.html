@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kotak Neo API Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">Kotak Neo API Dashboard</h1>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Active Tokens</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ user_tokens.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-key fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Holdings</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ holdings_summary.total_holdings|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Alerts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_alerts.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-bell fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                API Calls Today</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ api_logs_summary.total_calls|default:"0" }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-server fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Orders</h5>
+                    <p class="card-text">Manage trading orders and track their status</p>
+                    <a href="{% url 'kotak_neo_api:kotak_orders' %}" class="btn btn-primary">View Orders</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Holdings</h5>
+                    <p class="card-text">View your current portfolio holdings</p>
+                    <a href="{% url 'kotak_neo_api:kotak_holdings' %}" class="btn btn-success">View Holdings</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Market Data</h5>
+                    <p class="card-text">Real-time market data and quotes</p>
+                    <a href="{% url 'kotak_neo_api:kotak_market_data' %}" class="btn btn-info">View Market Data</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <i class="fas fa-bell fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Alerts</h5>
+                    <p class="card-text">Manage trading alerts and notifications</p>
+                    <a href="{% url 'kotak_neo_api:kotak_alerts' %}" class="btn btn-warning">View Alerts</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Data -->
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_orders %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Symbol</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in recent_orders %}
+                                    <tr>
+                                        <td>{{ order.order_id }}</td>
+                                        <td>{{ order.instrument.tradingsymbol }}</td>
+                                        <td>{{ order.transaction_type }}</td>
+                                        <td>
+                                            <span class="badge badge-{% if order.status == 'COMPLETE' %}success{% elif order.status == 'PENDING' %}warning{% elif order.status == 'REJECTED' %}danger{% else %}secondary{% endif %}">
+                                                {{ order.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ order.created_at|date:"M d, H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent orders</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Alerts -->
+        <div class="col-lg-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Active Alerts</h6>
+                </div>
+                <div class="card-body">
+                    {% if active_alerts %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Symbol</th>
+                                        <th>Type</th>
+                                        <th>Condition</th>
+                                        <th>Target</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for alert in active_alerts %}
+                                    <tr>
+                                        <td>{{ alert.name }}</td>
+                                        <td>{{ alert.instrument.tradingsymbol }}</td>
+                                        <td>{{ alert.alert_type }}</td>
+                                        <td>{{ alert.condition }}</td>
+                                        <td>{{ alert.target_value }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No active alerts</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Status -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">API Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ api_logs_summary.total_calls|default:"0" }}</h4>
+                                <p class="text-muted">Total API Calls</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-danger">{{ api_logs_summary.error_calls|default:"0" }}</h4>
+                                <p class="text-muted">Error Calls</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ user_tokens.count }}</h4>
+                                <p class="text-muted">Active Tokens</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ api_logs_summary.avg_response_time|default:"0"|floatformat:2 }}</h4>
+                                <p class="text-muted">Avg Response Time (s)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,7 @@
+
+{% for index, row in top_gainers.iterrows %}
+<tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+<td>{{row.symbol}}</td>
+<td>{{row.change_in_price_percentage}}%</td>
+</tr>
+{% endfor %}

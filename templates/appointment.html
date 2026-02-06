@@ -1,0 +1,225 @@
+{% extends 'base.html' %} {% load static %} 
+
+{% block inner_html %}
+
+
+
+  <!-- Page Title -->
+  <div class="page-title" data-aos="fade">
+    <div class="container d-lg-flex justify-content-between align-items-center">
+      <h1 class="mb-2 mb-lg-0">Appointment</h1>
+      <nav class="breadcrumbs">
+        <ol>
+          <li><a href="index.html">Home</a></li>
+          <li class="current">Appointment</li>
+        </ol>
+      </nav>
+    </div>
+  </div><!-- End Page Title -->
+
+  <!-- Starter Section Section -->
+  <section id="starter-section" class="starter-section section">
+
+    <!-- Section Title -->
+    
+    <div class="container">
+
+      <div class="row gy-4 pricing">
+
+        <div class="col-lg-8 border mx-1 p-2 pricing-item" data-aos="fade-up" data-aos-delay="200">
+          
+            <h5 class="text-dark,">Date & Time [INDIAN TIME ZONE]</h5>
+          <hr>
+          <div class="container ">
+            <h2> <span id="currentMonthYear"></span></h2>
+            <div class="navigation">
+              <button id="prevYear" class="btn btn-primary">Previous Year</button>
+              <button id="prevMonth" class="btn btn-secondary">Previous Month</button>
+             
+              <button id="nextMonth" class="btn btn-secondary">Next Month</button>
+              <button id="nextYear" class="btn btn-primary">Next Year</button>
+            </div>
+            <table class="table table-bordered calendar-table">
+              <thead>
+                <tr>
+                  <th>Sun</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                </tr>
+              </thead>
+              <tbody id="calendar-body"></tbody>
+            </table>
+          </div>
+          <div class="text-center header">
+         
+            <a class="btn-getstarted  btn-lg" href="{% url 'basic-details' %}">Next : Basic Details <i class="bi bi-arrow-right"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-3 border p-2 pricing-item" data-aos="fade-up" data-aos-delay="100">
+          <h5 class="text-dark,"> Time Slot [INDIAN TIME ZONE]</h5>
+          <hr>
+          <h6> Morning</h6>
+          <div class="pricing mt-2 mb-2 d-grid">
+          <button type="button" class="buy-btn " disabled>
+            8:30 am to 9:00 am <span class="badge bg-danger">1 slot left</span>
+          </button>
+        </div>
+        <div class="pricing mt-2 mb-2  d-grid">
+          <button type="button" class="buy-btn btn-block">
+            9:30 am to 10:00 am <span class="badge bg-danger">1 slot left</span>
+          </button>
+        </div>
+          <h6> Afternoon</h6>
+          <div class="pricing mt-2 mb-2 d-grid">
+            <button type="button" class="buy-btn " disabled>
+              8:30 am to 9:00 am <span class="badge bg-danger">1 slot left</span>
+            </button>
+          </div>
+          <div class="pricing mt-2 mb-2  d-grid">
+            <button type="button" class="buy-btn btn-block">
+              9:30 am to 10:00 am <span class="badge bg-danger">1 slot left</span>
+            </button>
+          </div>
+          <h6> Evening</h6>
+          <div class="pricing mt-2 mb-2 d-grid">
+            <button type="button" class="buy-btn " disabled>
+              8:30 am to 9:00 am <span class="badge bg-danger">1 slot left</span>
+            </button>
+          </div>
+          <div class="pricing mt-2 mb-2  d-grid">
+            <button type="button" class="buy-btn btn-block">
+              9:30 am to 10:00 am <span class="badge bg-danger">1 slot left</span>
+            </button>
+          </div>
+         
+
+         </div>
+
+      </div>
+
+    </div>
+    
+    <!-- End Section Title -->
+
+   
+
+  </section><!-- /Starter Section Section -->
+
+
+
+{% endblock %} 
+
+
+  <!-- Calender JS File -->
+ <script>
+  let today = new Date();
+  let currentMonth = today.getMonth();
+  let currentYear = today.getFullYear();
+  let bookedDates = ['2023-12-05', '2023-12-15']; // Add booked dates in 'YYYY-MM-DD' format
+  
+  document.getElementById("currentMonthYear").textContent = `${today.toLocaleString('default', { month: 'long' })} ${currentYear}`;
+  
+  function generateCalendar(year, month) {
+    const calendarBody = document.getElementById('calendar-body');
+    calendarBody.innerHTML = '';
+  
+    const firstDay = new Date(year, month).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+  
+    // Update the current month and year display
+    document.getElementById("currentMonthYear").textContent = `${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}`;
+  
+    let date = 1;
+    for (let i = 0; i < 6; i++) {
+      let row = document.createElement('tr');
+      for (let j = 0; j < 7; j++) {
+        let cell = document.createElement('td');
+        let cellText = document.createTextNode('');
+  
+        if (i === 0 && j < firstDay) {
+          // Empty cells at the start
+          cell.appendChild(cellText);
+          row.appendChild(cell);
+        } else if (date > daysInMonth) {
+          // Stop if dates exceed the total number of days in the month
+          break;
+        } else {
+          let currentDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+          cellText = document.createTextNode(date);
+          cell.appendChild(cellText);
+  
+          // Highlight the current date
+          if (date === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+            cell.classList.add('current-day');
+          }
+  
+          // Mark booked dates
+          if (bookedDates.includes(currentDate)) {
+            cell.classList.add('booked');
+          } else {
+            // Allow selecting available dates
+            cell.addEventListener('click', function () {
+              document.querySelectorAll('.calendar-table td').forEach(td => td.classList.remove('selected'));
+              cell.classList.add('selected');
+              alert("Selected date: " + currentDate);
+            });
+          }
+  
+          row.appendChild(cell);
+          date++;
+        }
+      }
+      calendarBody.appendChild(row);
+    }
+  }
+  
+  function updateCalendar() {
+    generateCalendar(currentYear, currentMonth);
+  }
+  
+  document.getElementById('prevYear').addEventListener('click', function () {
+    if (currentYear > today.getFullYear() - 99) {
+      currentYear--;
+      updateCalendar();
+    }
+  });
+  
+  document.getElementById('nextYear').addEventListener('click', function () {
+    if (currentYear < today.getFullYear() + 99) {
+      currentYear++;
+      updateCalendar();
+    }
+  });
+  
+  // Add event listeners for month navigation
+  document.getElementById('prevMonth').addEventListener('click', function() {
+    if (currentMonth === 0) {
+      currentMonth = 11;
+      currentYear--;
+    } else {
+      currentMonth--;
+    }
+    updateCalendar();
+  });
+  
+  document.getElementById('nextMonth').addEventListener('click', function() {
+    if (currentMonth === 11) {
+      currentMonth = 0;
+      currentYear++;
+    } else {
+      currentMonth++;
+    }
+    updateCalendar();
+  });
+  
+  // Initialize the calendar
+  generateCalendar(currentYear, currentMonth);
+  </script>
+
+
+
