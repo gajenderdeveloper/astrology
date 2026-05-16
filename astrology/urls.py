@@ -13,6 +13,8 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     #path('api-auth/', include('rest_framework.urls')),
     #url(r'^api/', include('polls.urls')),
+    
+    
 
     url(r'^', include('website.urls')),
     url(r'^option-chain/', include('trading.urls')),
@@ -20,6 +22,8 @@ urlpatterns = [
     url(r'^kotak/', include('KOTAK_NEO_API.urls')),
     #url(r'^zerodha/', include('zerodha.urls')),
     #url(r'^ckeditor/', include('ckeditor_uploader.urls')), # The CKEditor path
+    
+
 
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

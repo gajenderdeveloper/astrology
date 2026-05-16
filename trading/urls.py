@@ -56,7 +56,9 @@ urlpatterns += [
 
     #autocomplete
     path('my-autocomplete/', MyAutocomplete.as_view(), name='my_autocomplete'),
-
+    
+    path('order_atomic', views.order_atomic, name='order_atomic'),
+    
 
 ]
 

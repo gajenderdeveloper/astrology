@@ -502,9 +502,22 @@ def option_chain_coi_chart(request, symbol_name):
     symbol_name_original = symbol_name
 
     Zerodha = ZerodhaAPI()
-    quote_data = Zerodha.kite.quote([f"NSE:{symbol_name}"])
-    symbol_instrument = quote_data[f"NSE:{symbol_name}"].get('instrument_token')
-    symbol_lastprice = quote_data[f"NSE:{symbol_name}"].get('last_price')
+    # symbol_name is NIFTY or BANKNIFTY or 360ONE or PGEL
+    if symbol_name == 'NIFTY':
+        symbol_name_new = 'NIFTY 50'
+    elif symbol_name == 'BANKNIFTY':
+        symbol_name_new = 'NIFTY BANK'
+    elif symbol_name == '360ONE':
+        symbol_name_new = '360ONE'
+    elif symbol_name == 'PGEL':
+        symbol_name_new = 'PGEL'
+    else:
+        symbol_name_new = symbol_name
+    quote_data = Zerodha.kite.quote([f"NSE:{symbol_name_new}"])
+    print(quote_data)
+    print("===========================")
+    symbol_instrument = quote_data[f"NSE:{symbol_name_new}"].get('instrument_token')
+    symbol_lastprice = quote_data[f"NSE:{symbol_name_new}"].get('last_price')
     print("quote_data++++++++++++++++",quote_data)
 
     # instruments_df = instruments_df[(instruments_df["segment"] == 'NFO-OPT')]

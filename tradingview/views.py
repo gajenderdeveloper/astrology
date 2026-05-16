@@ -1,7 +1,10 @@
 from django.shortcuts import render
 from tradingview.function import * 
+import pandas as pd 
 from django.http import JsonResponse,HttpResponse
 from django.template.loader import render_to_string
+from .models import SectorSymbol
+
 
 # Create your views here.
 def dashboard(request):
@@ -13,8 +16,59 @@ def dashboard(request):
 
 def option_chain(request):
     data = topGainer()
+    df_sector = pd.DataFrame()
+    df_sector = pd.DataFrame.from_records(SectorSymbol.objects.select_related("sector").only('symbol', 'sector__name').values('symbol', 'sector__name'))
+    # replace Nifty with "Nifty 50"
+    print("df_sector==============================99999999999")
+    print(df_sector)
+
     top_gainers = data['top_gainers']
-    print("top gainer==============================99999999999")
+    #join top_gainers with df_sector on symbol
+    top_gainers = top_gainers.merge(df_sector, on='symbol', how='left')
+    print("top gainer==============================399999999999")
+
+    print(top_gainers)
+    df_metal = top_gainers[top_gainers['sector__name'] == 'NIFTY METAL'].sort_values(by='change_in_price_percentage', ascending=False)
+    print("sector_metal==============================metal sector top gainers")
+    print(df_metal)
+
+    default_symbol = top_gainers['symbol'].iloc[0]
+
+    data_call_db = MostActiveSymbol.objects.filter(type='CALL').values().order_by('-updated_at')
+    data_call_db = pd.DataFrame.from_records(data_call_db)
+    #print("data_call_db==================",data_call_db)
+
+    data_call = pd.DataFrame(['HAL','ICICBANK','HDFCBANK','LT'], columns=["symbol"])
+    most_active_contracts = render_to_string('tradingview/ajax_most_active_contracts.html', 
+                                    {
+                                        'df_call': data_call_db,
+                                        #'df_put': data_put,
+                                        'index':'calls-stocks-vol'
+                                    }, 
+                                    request=request)
+    context = {
+        'top_gainers':top_gainers,
+        'default_symbol' : default_symbol,
+        'most_active_contracts':most_active_contracts,
+        'df_metal' : df_metal,
+        'df_auto' : top_gainers[top_gainers['sector__name'] == 'NIFTY AUTO'].sort_values(by='change_in_price_percentage', ascending=False)  ,
+        'df_bank' : top_gainers[top_gainers['sector__name'] == 'NIFTY BANK'].sort_values(by='change_in_price_percentage', ascending=False),
+        'df_it' : top_gainers[top_gainers['sector__name'] == 'NIFTY IT'].sort_values(by='change_in_price_percentage', ascending=False),
+        'df_pharma' : top_gainers[top_gainers['sector__name'] == 'NIFTY PHARMA'].sort_values(by='change_in_price_percentage', ascending=False)               
+    }
+    # check request is ajax
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        print("AJAX request received from option_chain=")
+        html_content = render_to_string('tradingview/ajax_top_gainner.html', context, request=request)
+        #return HttpResponse(html_content)
+        return JsonResponse({'html_content': html_content})
+       
+    return render(request, 'tradingview/option_chain.html', context)
+
+def sectors(request):
+    data = topGainer()
+    top_gainers = data['top_gainers']
+    print("top gainer sectors==============================99999999999")
     print(top_gainers)
     default_symbol = top_gainers['symbol'].iloc[0]
 
@@ -122,3 +176,5 @@ def ajax_option_chain(request):
             return JsonResponse({'error': str(e)})
     else:
         return JsonResponse({'error': 'Invalid request method or not an AJAX request.'})
+    
+

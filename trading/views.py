@@ -14,6 +14,7 @@ import importlib
 import traceback
 from dal import autocomplete
 from django.conf import settings
+from django.db import transaction, IntegrityError
 # Create your views here.
 symbol_list_new = [
         #"NIFTY",
@@ -698,6 +699,35 @@ def cron_job_status(request):
     return JsonResponse({'jobs': data})
 
 
+def order_atomic(request):
+    print("testing for atomic transactions")
+
+    sender_id = 1713
+    reciever_id = 1712
+    pending_quantity = 50
+    with transaction.atomic():
+        try:
+            sender_account = Orders.objects.select_for_update().get(id=sender_id)
+            reciever_account = Orders.objects.select_for_update().get(id=reciever_id)
+            #pending_quantity = 100
+           
+            sender_account.pending_quantity -= pending_quantity
+            reciever_account.pending_quantity += pending_quantity
+            sender_account.save()
+            reciever_account.save()
+            print("Transaction completed successfully")
+           
+        except Orders.DoesNotExist:
+            print("Sender or reciever account not found")
+        except IntegrityError:
+            print("Transaction failed due to concurrent update")
+
+
+    order = Orders.objects.get(id=1713)
+    print(order.id)
+
+    return JsonResponse({'jobs': 'ok'})
+
 
 
 # from astrology.zerodha_integration import ZerodhaAPI
@@ -726,6 +756,7 @@ def cron_job_status(request):
 #     to_date="2024-03-20",
 #     interval="day"
 # )
+
 
 
 if __name__ == "__main__":

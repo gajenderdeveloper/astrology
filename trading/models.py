@@ -27,7 +27,7 @@ class Change_IN_OI_Increasing(models.Model):
     prev_oi_quantity = models.FloatField(default=0)
     change_in_oi_percentage_quantity = models.FloatField(default=0)
 
-    created_at = models.CharField(max_length=20, default=datetime.now().strftime("%Y-%m-%d %H:%M"))
+    #created_at = models.CharField(max_length=20, default=datetime.now().strftime("%Y-%m-%d %H:%M"))
 
     def __str__(self):
         return self.symbol

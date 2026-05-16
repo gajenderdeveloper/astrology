@@ -44,6 +44,8 @@ from trading.nse_options import MostActiveContracts
 import requests
 from trading.function import generate_stock_chart
 
+from tradingview.models import Sector,SectorSymbol
+
 
 PROJECT_PATH = os.path.dirname(settings.BASE_DIR)
 instrument_file = os.path.join(PROJECT_PATH,'astrology','DATA','instruments.csv')
@@ -53,18 +55,6 @@ symbol_list_df = pd.read_csv(os.path.join(PROJECT_PATH,'astrology','DATA','symbo
    
 Zerodha = ZerodhaAPI()
 
-
-def check_totla_time(func):
-    def wrapper():
-        try:
-            start = time()
-            logger.info(f"decorator find start time of function{func.__name__}",start)
-            func()
-            end = time()
-            logger.info(f"decorator find total time of function{func.__name__}",end-start)
-        except Exception as e:
-            logger.error(f"Error in decorator find total time of function{func.__name__}",e)
-    return wrapper
 
 def my_scheduled_job():
     """
@@ -150,6 +140,18 @@ def signal_200ma():
         logger.error("Error in signal_200ma job: %s", str(e), exc_info=True)
        
         raise
+
+
+def crone_time(fun):
+    def inner_wrapper():
+        start_time = time.time()
+        print("============cron start_time",start_time)
+        fun()
+        end_time = time.time()
+        total_time = end_time - start_time
+        print(f"Total time {fun.__name__}:{total_time}")
+    return inner_wrapper
+        
 
 
 def zerodha_save_changein_oi():
@@ -377,6 +379,7 @@ def option_chain():
             if symbol == 'NIFTY' or symbol == 'BANKNIFTY' or symbol == '360ONE' or symbol == 'PGEL':
                 continue
             try:
+                
                 current_price = quote_data[f"NSE:{symbol}"]["last_price"]
                 instrument_token = quote_data[f"NSE:{symbol}"]["instrument_token"]
                 #day_low = quote_data[f"NSE:{symbol}"]["ohlc"]["low"]
@@ -605,6 +608,12 @@ def Change_IN_OI_Increasing_Save():
         logger.error("Error in Change_IN_OI_Increasing_Save job: %s", str(e), exc_info=True)
         raise
 
+@crone_time
+def check_test():
+    time.sleep(2)
+    print("test")
+
+@crone_time
 def Change_IN_OI_scanner():
     """
     Function to check if Change in OI is increasing
@@ -635,7 +644,7 @@ def Change_IN_OI_scanner():
         today = (datetime.now()).strftime("%Y-%m-%d")
         #result = COI.objects.filter(created_at__date=today)
         #df = pd.DataFrame.from_records(result.values())
-        
+        ScaningStockOI.objects.all().delete()
         for symbol in symbols_list: 
             #symbol = 'LT'
             df_final = pd.DataFrame()
@@ -667,6 +676,7 @@ def Change_IN_OI_scanner():
 
             call_max = df_call['call_coi'].max()
             put_max = df_put['put_coi'].max()
+            
             if call_total > put_total*2 and call_total>200: 
                     obj, created = ScaningStockOI.objects.update_or_create(
                         symbol= symbol, 
@@ -993,6 +1003,95 @@ def test_code():
     find_path(documents, [])
     print(output)
 
+def get_sector_by_symbol(sector_name):
+    import requests
+    import json
+    import time
+
+    #sector_name = "NIFTY IT"
+    url = "https://www.nseindia.com/api/equity-stockIndices?index=" + sector_name
+
+    # Create a session
+    session = requests.Session()
+
+    # Set comprehensive headers to mimic a real browser
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Cache-Control': 'max-age=0',
+    }
+
+    # First, make a GET request to the main NSE website to get cookies
+    print("Getting initial cookies...")
+    initial_response = session.get("https://www.nseindia.com", headers=headers)
+    time.sleep(2)  # Wait a bit to simulate human behavior
+
+    # Update headers for API request
+    api_headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.nseindia.com/',
+        'X-Requested-With': 'XMLHttpRequest',
+    }
+
+    # Then make the API request
+    print(f"Fetching data for {sector_name}...")
+    response = session.get(url, headers=api_headers)
+
+    print(f"Status code: {response.status_code}")
+    print(f"Content type: {response.headers.get('content-type', 'Unknown')}")
+
+    if response.status_code == 200:
+        try:
+            # Check if response is JSON
+            if 'application/json' in response.headers.get('content-type', ''):
+                data = response.json()
+                print(json.dumps(data, indent=2))  # Pretty print JSON
+                
+                # Extract and display stock information
+                if 'data' in data:
+                    print(f"\n{'='*80}")
+                    print(f"Sector: {sector_name}")
+                    sector_obj = Sector()
+                    sector_obj.name = sector_name
+                    sector_obj.save()
+
+                    print(f"{'='*80}")
+                    for stock in data['data']:
+                        if stock.get('priority') == 0: 
+                            # print(f"Symbol: {stock.get('symbol')}")
+                            # print(f"  Last Price: {stock.get('lastPrice')}")
+                            # print(f"  Change: {stock.get('change')} ({stock.get('pChange')}%)")
+                            # print(f"  Open: {stock.get('open')}")
+                            # print(f"  High: {stock.get('dayHigh')}")
+                            # print(f"  Low: {stock.get('dayLow')}")
+                            # print(f"  Volume: {stock.get('totalTradedVolume')}")
+                            # print("-" * 40)
+                            sector_symbol = SectorSymbol()
+                            sector_symbol.sector = sector_obj
+                            sector_symbol.symbol = stock['meta']['symbol']
+                            sector_symbol.company_name = stock['meta']['companyName']
+                            sector_symbol.save()
+
+
+            else:
+                print("Response is not JSON. Here's the first 500 characters:")
+                print(response.text[:500])
+        except json.JSONDecodeError as e:
+            print(f"JSON Decode Error: {e}")
+            print(f"Response text (first 500 chars): {response.text[:500]}")
+    else:
+        print(f"Failed to fetch data. Status code: {response.status_code}")
+        print(f"Response text: {response.text[:500]}")
 
 
 
@@ -1002,53 +1101,111 @@ if __name__ == "__main__":
     #my_scheduled_job()
     #save_instrument()
     #zerodha_save_changein_oi() # save previous OI data
+    Change_IN_OI_scanner() # save current OI totla check 
+    #check_test()
     #Change_IN_OI_Increasing_Save()
-    Change_IN_OI_scanner() # save current OI check 
+    
     #scanner_200ma()
+
     #option_chain()
+    # sectior_list = ['NIFTY REALTY']
+    # for sector_name in sectior_list:
 
+    #     get_sector_by_symbol(sector_name) # get symbol by section name from nse site
 
-    #ThreadExecutor()
-
-    # data =generate_stock_chart({'symbol':'ABB'})
-    # COI_DATA = data['time_grouped']
-    # call = COI_DATA.iloc[-1]['call_coi']
-    # put = COI_DATA.iloc[-1]['put_coi']
-
-    today = datetime.now().date()-timedelta(days=1)
-    created_date = today
-    symbol_name = 'ABB'
-
-    result = COI.objects.filter(created_at__date=created_date,symbol=symbol_name).order_by('id')
-    df_chart = pd.DataFrame.from_records(result.values())
-    columns = ['symbol',  'strike', 'call_coi', 'current_price','put_coi','created_at','date','time']
-    df_chart['created_at'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%Y-%m-%d %H:%M')
-    df_chart['date'] = pd.to_datetime(df_chart['created_at']).dt.date
-    df_chart['time'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%H:%M')
-
-    # creted date unique values
-    df_final = pd.DataFrame()
-    created_date = df_chart['created_at'].unique()
-    for date in created_date:
-        print("Created Date:", date)
-        df_date = df_chart[df_chart['created_at'] == date]
-        current_price = df_date['current_price'].iloc[-1]
-        df_call = df_date[(df_date['strike'] >= current_price)]
-        df_put = df_date[(df_date['strike'] <= current_price)]    
-        df = pd.concat([df_put.tail(3),df_call.head(3)])
-        df_final = pd.concat([df_final, df])
+    instrument_df = instruments_df[(instruments_df["segment"] == 'NFO-OPT')]
+    symbol = instrument_df['name'].unique()
+    symbols_list = symbol.tolist()
+    df = pd.DataFrame()
+    today = (datetime.now()).strftime("%Y-%m-%d")
+    #today = "2026-05-04"
+    scanner_coi = {'buy' : [],'sell' : []}
+    for symbol in symbols_list: 
+        #symbol = 'CGPOWER'
+        df_final = pd.DataFrame()
+        print("==============tradingsymbol=",symbol)
+        result = COI.objects.filter(created_at__date=today,symbol=symbol).order_by('-id')
+        if result.count() == 0:
+            continue
+        df = pd.DataFrame.from_records(result.values())
+        df = df.sort_values(by='id', ascending=True)
+        current_price = df['current_price'].iloc[-1]
         
-    
-    current_price = df_chart['current_price'].iloc[-1]
-    # filter df_chart for strike 5 above and below current price
-    
-    # df_chart = df_chart[columns] 
-    # # df filter for strike price within 5 above and below current price
-    # df_call = df_chart[(df_chart['strike'] >= current_price)]
-    # df_put = df_chart[(df_chart['strike'] <= current_price)]    
-    # df_chart = pd.concat([df_put.tail(5),df_call.head(5)])
+        # dataframe date format
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%d %H:%M')
+        #add column date and time
+        df['date'] = pd.to_datetime(df['created_at']).dt.date
+        df['time'] = pd.to_datetime(df['created_at']).dt.strftime('%H:%M')
+        #df = df[['symbol','current_price','strike','created_at']]
 
-    print(df_chart)
+        current_price = df['current_price'].iloc[-1]
+        current_datetime = df['created_at'].iloc[-1]
+        df = df[df['created_at'] == current_datetime]
+        # df_call = df[(df['strike'] >= current_price) & (df['created_at'] == current_datetime)]
+        df_call = df[(df['strike'] >= current_price)]
+        #df_put = df[(df['strike'] <= current_price) & (df['created_at'] == current_datetime)] 
+        df_put = df[df['strike'] <= current_price ] 
+
+        df_call = df_call.head(2)
+        df_put = df_put.tail(2)
+
+        call_sum = int(df_call['call_coi'].sum())
+        put_sum = int(df_put['put_coi'].sum())
+
+        call_max = int(df['call_coi'].max())
+        call_max_strik = int(df_call['call_coi'].head(1))
+
+        put_max = int(df['put_coi'].max())
+        put_max_strik = int(df_put['put_coi'].tail(1))
+
+
+        if call_max == call_max_strik and call_sum > put_sum*2 and call_sum>200 :
+            scanner_coi['sell'].append(symbol)
+
+        if put_max == put_max_strik and put_sum > call_sum*2 and put_sum>200 :
+            scanner_coi['buy'].append(symbol)
+
+        print(scanner_coi)    
+    print("===buy===")
+    print(scanner_coi['buy'])
+    print("===")
+    print("===sell===")
+    print(scanner_coi['sell'])
+    print("===")
+    #code for even no
+
+    
+
+
+
+        
+
+
+    
+    # import re
+    # #n, m = map(int, input().split())
+    # n, m = map(int, input().split())
+    # matrix = []
+    # for _ in range(n):
+    #     matrix.append(input())
+
+    # decoded = ""
+    # for col in range(m):
+    #     for row in range(n):
+    #         print("===",matrix[row][col])
+    #         decoded += matrix[row][col]
+    #         # print(col,row)
+    #         # print("===")
+
+
+    # #decoded = re.sub(r'(?<=\w)[^\w]+(?=\w)', ' ', decoded)
+    # print(decoded)
+    # print("helo")
+    # print("cccc")
+
+
+
+
 
 
     

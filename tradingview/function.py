@@ -89,33 +89,40 @@ def generate_stock_chart(request):
     print("Current time-------------------:generate_stock_chart", current_time)
 
     today = datetime.now().date()
-    if time(1, 7) <= current_time <= time(9, 14):
+    today = settings.TODAY_DATE
+    
+    if time(1, 7) <= current_time <= time(9, 22):
         print("==============Today's date for chart data:", today)
-        today = datetime.now().date()-timedelta(days=1)
+        week_day = datetime.now().isoweekday()
+        minus_day = int("2") if week_day == 7 else int("1")
+        today = datetime.now().date()-timedelta(days=minus_day)
     else:
-        today = datetime.now().date()
+        today = today
 
+    
     holiday_list = ['2026-03-03','2026-03-26','2026-03-31','2026-04-03']
     if today.strftime('%Y-%m-%d') in holiday_list:
             today = today - timedelta(days=1)
 
-    #today = datetime.now().date()-timedelta(days=1) this comment fo testing purpose
+    #today = datetime.now().date()-timedelta(days=1) #this comment fo testing purpose
    
     if 'date' in request:
         date_str = request['date']
         created_date = pd.to_datetime(date_str).date()
     else:
         created_date = today
-    #print("====Using created_date for chart:", created_date)
+    
+    print("====Using created_date for chart:", today,created_date)
+
     result = COI.objects.filter(created_at__date=created_date,symbol=symbol).order_by('-id')
     df_chart = pd.DataFrame.from_records(result.values())
+
     df_chart = df_chart.sort_values(by='id', ascending=True)
     # dataframe date format
     df_chart['created_at'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%Y-%m-%d %H:%M')
     #add column date and time
     df_chart['date'] = pd.to_datetime(df_chart['created_at']).dt.date
     df_chart['time'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%H:%M')
-
     #print(df_chart.columns)
     #print(df_chart[['symbol','strike','call_trading_symbol','put_trading_symbol','created_at','date','time','current_price']].head(10))
     df_oi = df_chart.copy()

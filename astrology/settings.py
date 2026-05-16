@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import pymysql
 import os
+from datetime import datetime, time, timedelta
 
 pymysql.install_as_MySQLdb()
 
@@ -283,9 +284,11 @@ LOGGING = {
         },
     },
 }
-
-EXPIRY = '2026-02-24'
-#EXPIRY = '2025-07-31'
+TODAY_DATE = datetime.now().date()-timedelta(days=1)
+#TODAY_DATE = "2026-05-15"
+print(TODAY_DATE)
+#EXPIRY = '2026-04-28'
+EXPIRY = '2026-05-26'
 # ZERODHA_API_KEY = 'wx9fzilixlw1ihob'
 # ZERODHA_API_SECRET = 'ix2u1lc5pdgxma9mgfflfg16nmma8osp'
 # ZERODHA_ACCESS_TOKEN = ''
@@ -293,3 +296,6 @@ EXPIRY = '2026-02-24'
 KOTAK_NEO_USER_ID = 'client26349'
 KOTAK_NEO_API_KEY = 'L3oHgffw2uTUcyIvAiPhvjJlVWUa'
 KOTAK_NEO_API_SECRET = 'VOmGP3ofzWSBzmeAOFSgJXL1SVYa'
+
+
+

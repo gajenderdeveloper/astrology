@@ -9,6 +9,7 @@ import yfinance as yf
 from .get_options_data import get_specific_expiration
 from .nse_options import NSEOptions, NSEOptionChain
 from django.http import HttpResponse
+from django.http import JsonResponse
 symbol_list_new = [
         "NIFTY",
         "AARTIIND",
@@ -519,6 +520,17 @@ def get_current_time(request):
     """View that returns a partial HTML with the current time."""
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     return HttpResponse(f"Current time: {now}")
+
+def zerodha_api_callback(request):
+    print(request)
+    print("===============zerodha ============")
+    print(request.GET)
+    if 'request_token' in request.GET and request.GET['status']=='success' :
+        return JsonResponse(request.GET)
+
+
+    return JsonResponse(request.GET)
+
 
 
 if __name__ == "__main__":

@@ -87,6 +87,7 @@ class ZerodhaAPI:
 
     def authenticate(self):
         """Complete the authentication flow"""
+        pass
         try:
             # Step 1: Get login URL and open in browser
             if self.access_token is None:

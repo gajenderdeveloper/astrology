@@ -75,7 +75,7 @@
                 {% for index, row in df.iterrows %}
                 <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
                    
-                    <td><a target="_blank" href="{% url 'oi_option' row.symbol %}">{{ row.symbol }}</a></td>
+                    <td><a target="_blank" href="{% url 'option_chain_coi_chart' row.symbol %}">{{ row.symbol }}</a></td>
                     <td>{{ row.total_volume_call }}</td>
                     <td>{{ row.total_volume_put }}</td>
                     <td>{{ row.total_coi_call|floatformat:2 }}</td>
@@ -108,7 +108,7 @@
                 {% for index, row in df_put.iterrows %}
                 <tr class="{% if row.change_in_oi_percentage > 0 %}text-success{% else %}text-danger{% endif %}">
                    
-                    <td><a target="_blank" href="{% url 'oi_option' row.symbol %}">{{ row.symbol }}</a></td>
+                    <td><a target="_blank" href="{% url 'option_chain_coi_chart' row.symbol %}">{{ row.symbol }}</a></td>
                     <td>{{ row.total_volume_call }}</td>
                     <td>{{ row.total_volume_put }}</td>
                     <td>{{ row.total_coi_call|floatformat:2 }}</td>

@@ -14,11 +14,12 @@
       <div class="main-panel" style="width: 100%;">
          <div class="content-wrapper">
           <div class="row">
+            
             <div class="col-md-2  stretch-card" >
-             <div class="card-text small position-fixed" >
+             <div class=""" >
                 <div class="body_top_gainer">
                 <div class="card-header bg-light p-0">
-                    <a href="#gainerTable_2" class="btn btn-outline-light w-100 text-start fw-bold fs-5 p-3 border-0" data-bs-toggle="collapse" aria-expanded="true" aria-controls="gainerTable_2">
+                    <a href="#gainerTable_2" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="gainerTable_2">
                         Top Gainers 
                     </a>
                 </div>
@@ -53,11 +54,11 @@
 
                 <div class="body_mostattractive">
                 <div class="card-header bg-light p-0">
-                    <a href="#mostattractiveTable" class="btn btn-outline-light w-100 text-start fw-bold fs-5 p-3 border-0" data-bs-toggle="collapse" aria-expanded="true" aria-controls="mostattractiveTable">
-                        Most Attractive 
+                    <a href="#metalTable" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="metalTable">
+                        Metal 
                     </a>
                 </div>
-                  <div class="table-responsive collapse hide" id="mostattractiveTable">
+                  <div class="table-responsive collapse hide" id="metalTable">
                     <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
                         <table class="table table-hover mb-0">
                         <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
@@ -78,7 +79,7 @@
                         </thead>
                         <tbody>
                             {% include 'tradingview/ajax_most_active_contracts.html' %}
-                            {% for index, row in top_gainers.iterrows %}
+                            {% for index, row in df_metal.iterrows %}
                             <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
                             <td>{{row.symbol}}</td>
                             <td>{{row.change_in_price_percentage}}%</td>
@@ -91,12 +92,173 @@
                 </div>
 
 
+                 <div class="body_mostattractive">
+                <div class="card-header bg-light p-0">
+                    <a href="#autoTable" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="autoTable">
+                        Auto
+                    </a>
+                </div>
+                  <div class="table-responsive collapse hide" id="autoTable">
+                    <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% include 'tradingview/ajax_most_active_contracts.html' %}
+                            {% for index, row in df_auto.iterrows %}
+                            <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+                            <td>{{row.symbol}}</td>
+                            <td>{{row.change_in_price_percentage}}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="body_mostattractive">
+                <div class="card-header bg-light p-0">
+                    <a href="#bankTable" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="bankTable">
+                        Bank
+                    </a>
+                </div>
+                  <div class="table-responsive collapse hide" id="bankTable">
+                    <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% include 'tradingview/ajax_most_active_contracts.html' %}
+                            {% for index, row in df_bank.iterrows %}
+                            <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+                            <td>{{row.symbol}}</td>
+                            <td>{{row.change_in_price_percentage}}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="body_mostattractive">
+                <div class="card-header bg-light p-0">
+                    <a href="#itTable" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="itTable">
+                        IT
+                    </a>
+                </div>
+                  <div class="table-responsive collapse hide" id="itTable">
+                    <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% include 'tradingview/ajax_most_active_contracts.html' %}
+                            {% for index, row in df_it.iterrows %}
+                            <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+                            <td>{{row.symbol}}</td>
+                            <td>{{row.change_in_price_percentage}}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- pharma -->
+                 <div class="body_mostattractive">
+                <div class="card-header bg-light p-0">
+                    <a href="#pharmaTable" class="btn btn-outline-light w-100 text-start fw-bold " data-bs-toggle="collapse" aria-expanded="true" aria-controls="pharmaTable">
+                        Pharma
+                    </a>
+                </div>
+                  <div class="table-responsive collapse hide" id="pharmaTable">
+                    <div class="table-container" style="min-height: 300px; max-height: 450px; overflow-y: auto;">
+                        <table class="table table-hover mb-0">
+                        <thead class="sticky-top bg-white" style="top: 0; z-index: 1;">
+                            <tr>
+                            <th scope="col" class="sortable" data-sort="name">
+                                Name
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            <th scope="col" class="sortable" data-sort="date">
+                                chg %
+                                <span class="sort-icon">
+                                <i class="bi bi-arrow-down-up"></i>
+                                </span>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% include 'tradingview/ajax_most_active_contracts.html' %}
+                            {% for index, row in df_pharma.iterrows %}
+                            <tr data-symbol="{{row.symbol}}" class="stock-symbol-link">
+                            <td>{{row.symbol}}</td>
+                            <td>{{row.change_in_price_percentage}}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                    </div>
+                </div>
+
+
+
                 
               </div>
 
               
               
             </div>
+
+            <!-- right chart -->
             <div class="col-md-10 grid-margin stretch-card" style="--bs-gutter-x:0px">
               <div class="card">
                 <div class="card-body " style="padding:0.5rem 0.8rem">
