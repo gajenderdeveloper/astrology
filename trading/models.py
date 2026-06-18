@@ -461,3 +461,58 @@ class COI(models.Model):
         db_table = "coi_data"
         verbose_name_plural = "COI"
         ordering = ['-created_at']
+
+
+
+class COI_INDEX(models.Model):
+    """
+    Model to store COI data.
+    This model is used to track stocks that are active in the pre-market session.
+    """
+    id = models.AutoField(primary_key=True)
+    symbol = models.CharField(max_length=50,default='',db_index=True)
+    instrument_token = models.CharField(max_length=50,default='')
+    expiry_date = models.DateField(null=False, blank=False)
+    strike = models.FloatField(default=0)
+    current_price = models.FloatField(default=0)
+
+    call_trading_symbol = models.CharField(max_length=50,default='')
+    call_instrument_token = models.CharField(max_length=50,default='')
+    call_oi = models.FloatField(default=0)
+    call_coi = models.FloatField(default=0)
+    call_coi_percentage = models.FloatField(default=0)
+    call_volume = models.FloatField(default=0)
+    call_last_price = models.FloatField(default=0)
+    call_lots = models.FloatField(default=0)
+    call_pre_oi = models.FloatField(default=0)
+    call_current_price = models.FloatField(default=0)
+    call_day_low = models.FloatField(default=0)
+    call_day_high = models.FloatField(default=0)
+    call_day_open = models.FloatField(default=0)
+
+    put_trading_symbol = models.CharField(max_length=50,default='')
+    put_instrument_token = models.CharField(max_length=50,default='')
+    put_oi = models.FloatField(default=0)
+    put_coi = models.FloatField(default=0)
+    put_coi_percentage = models.FloatField(default=0)
+    put_volume = models.FloatField(default=0)
+    put_last_price = models.FloatField(default=0)
+    put_lots = models.FloatField(default=0)
+    put_pre_oi = models.FloatField(default=0)
+    put_current_price = models.FloatField(default=0)
+    put_day_low = models.FloatField(default=0)
+    put_day_high = models.FloatField(default=0)
+    put_day_open = models.FloatField(default=0)
+
+
+
+    created_at = models.DateTimeField(auto_now_add=True,db_index=True)
+
+    def __str__(self):
+        return self.symbol
+
+    class Meta:
+        db_table = "coi_data_index"
+        verbose_name_plural = "COI INDEX"
+        ordering = ['-created_at']
+

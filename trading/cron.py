@@ -22,6 +22,7 @@ except Exception as e:
 
 import logging
 from django.utils import timezone
+#from cron_test import zerodha_place_order
 #from .models import CronJob, CronJobExecution
 
 import pandas as pd 
@@ -1094,6 +1095,80 @@ def get_sector_by_symbol(sector_name):
         print(f"Response text: {response.text[:500]}")
 
 
+def index_option():
+    """
+    Function to save option chain data
+    """
+    try:
+        start_time = datetime.now()
+        logger.info("Starting option_chain_index job at %s", start_time)
+        index_df = pd.DataFrame()
+        index_df = instruments_df
+        from datetime import time
+        current_time = datetime.now().time()
+        if time(9, 15) <= current_time <= time(15, 30):
+            logger.info(f"Otion Chain job is running at {current_time}")
+        else:
+            logger.info(f"Otion Chain job is not running outside of trading hours {current_time}")
+            return
+       
+        current_date = datetime.now()
+        current_year = current_date.year
+        current_month = current_date.month
+
+        # Apply filters including current month and year
+        index_df = index_df[
+            (index_df['exchange'] == 'NFO') &
+            (index_df['segment'] == 'NFO-OPT') &
+            (index_df['name'] == 'NIFTY') &
+            (pd.to_datetime(index_df['expiry']).dt.year == current_year) &
+            (pd.to_datetime(index_df['expiry']).dt.month == current_month)
+        ]
+        index_df['expiry'] = index_df['expiry'].astype(str)
+        expiry_list = index_df['expiry'].unique()
+        n = 0
+        #quote_data = Zerodha.kite.quote([f"NSE:{symbol}" for symbol in symbols_list])
+        symbol_for_quote = "NIFTY 50"
+        symbol = "NIFTY"
+        Zerodha = ZerodhaAPI()
+        quote_data = Zerodha.kite.quote([f"NSE:{symbol_for_quote}"])
+        for expiry in expiry_list:
+            expiry_date = expiry
+            try:
+                current_price = quote_data[f"NSE:{symbol_for_quote}"]["last_price"]
+                instrument_token = quote_data[f"NSE:{symbol_for_quote}"]["instrument_token"]
+            except KeyError:
+                logger.error(f"KeyError: No data found for nifty {symbol}. Skipping.")
+                continue
+            except Exception as e:
+                logger.error(f"Error fetching current price for nifty {symbol}: {str(e)}")
+                continue
+
+            n = n + 1
+            filter_df = index_df[index_df['expiry'] == expiry_date]
+            filter_df.sort_values(by=['strike'], inplace=True)
+            # add previous OI and LTP and change in OI
+            data = calculate_coi(
+                Zerodha,symbol,
+                filter_df,
+                expiry_date=expiry_date
+                )
+                      
+            instrument_df = data['df']
+            if instrument_df.empty:
+                logger.warning(f"No data found for {symbol} on {expiry_date}. Skipping.")
+                continue
+            if not instrument_df.empty:
+                res = save_coi_index(instrument_df,symbol,instrument_token,current_price,expiry_date=expiry_date)
+                #symbol_list_new.append(symbol)
+
+        logger.info("start_time: %s", start_time)
+        logger.info("Completed at %s", datetime.now())
+        logger.info("Duration: %s seconds", (datetime.now() - start_time).total_seconds())  
+
+    except Exception as e:
+        logger.error("Error in option_chain job: %s", str(e), exc_info=True)
+        raise   
 
 if __name__ == "__main__":
     # This block is for testing the functions locally
@@ -1108,10 +1183,18 @@ if __name__ == "__main__":
     #scanner_200ma()
 
     #option_chain()
+    #index_option()
     # sectior_list = ['NIFTY REALTY']
     # for sector_name in sectior_list:
 
     #     get_sector_by_symbol(sector_name) # get symbol by section name from nse site
+
+    # n=10
+    # while n==10:
+    #     print(datetime.now())
+    #     time.sleep(2)
+    #     zerodha_place_order()
+
 
     instrument_df = instruments_df[(instruments_df["segment"] == 'NFO-OPT')]
     symbol = instrument_df['name'].unique()

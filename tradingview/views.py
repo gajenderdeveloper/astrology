@@ -19,18 +19,18 @@ def option_chain(request):
     df_sector = pd.DataFrame()
     df_sector = pd.DataFrame.from_records(SectorSymbol.objects.select_related("sector").only('symbol', 'sector__name').values('symbol', 'sector__name'))
     # replace Nifty with "Nifty 50"
-    print("df_sector==============================99999999999")
-    print(df_sector)
+    # print("df_sector==============================99999999999")
+    # print(df_sector)
 
     top_gainers = data['top_gainers']
     #join top_gainers with df_sector on symbol
     top_gainers = top_gainers.merge(df_sector, on='symbol', how='left')
-    print("top gainer==============================399999999999")
+    # print("top gainer==============================399999999999")
+    # print(top_gainers)
 
-    print(top_gainers)
     df_metal = top_gainers[top_gainers['sector__name'] == 'NIFTY METAL'].sort_values(by='change_in_price_percentage', ascending=False)
-    print("sector_metal==============================metal sector top gainers")
-    print(df_metal)
+    # print("sector_metal==============================metal sector top gainers")
+    # print(df_metal)
 
     default_symbol = top_gainers['symbol'].iloc[0]
 
@@ -68,8 +68,8 @@ def option_chain(request):
 def sectors(request):
     data = topGainer()
     top_gainers = data['top_gainers']
-    print("top gainer sectors==============================99999999999")
-    print(top_gainers)
+    # print("top gainer sectors==============================99999999999")
+    # print(top_gainers)
     default_symbol = top_gainers['symbol'].iloc[0]
 
     data_call_db = MostActiveSymbol.objects.filter(type='CALL').values().order_by('-updated_at')

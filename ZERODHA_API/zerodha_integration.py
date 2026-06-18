@@ -378,6 +378,7 @@ class ZerodhaAPI:
 
             # Get quote data (for OI and volume)
             quote_data = self.kite.quote([f"{exchange}:{symbol}" for symbol in trading_symbols])
+            print(quote_data)
 
             # Extract LTP values and add to DataFrame
             filtered_df['ltp'] = filtered_df['tradingsymbol'].apply(

@@ -75,7 +75,7 @@
       <a href="{% url 'home' %}" class="logo d-flex align-items-center me-auto me-xl-0">
         <!-- Uncomment the line below if you also wish to use an image logo -->
         <!-- <img src="{% static 'assets/img/logo.png' %}" alt=""> -->
-        <h1 class="sitename">Astro</h1>
+        <h1 class="sitename">Trading</h1>
         <span>.</span>
       </a>
 
@@ -118,6 +118,7 @@
             </ul>
           </li>
           <!-- <li><a href="{% url 'horoscope' horoscope_slug  %}">Horoscopes</a></li> -->
+          <li><a href="{% url 'nifty_coi_chart'  %}">NIFTY</a></li>
           <li><a href="{% url 'appointment'  %}">Appointment</a></li>
           <li><a href="{% url 'price'  %}">Pricing</a></li>
           <li class="dropdown"><a href="#"><span>Option Chain</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
@@ -518,6 +519,8 @@ $('#placeOrderBtn').click(function() {
         strike: $(this).data('strike'),
         date: $(this).data('date'),
         time: $(this).data('time'),
+        expiry: $(this).data('expiry'),
+        
         csrfmiddlewaretoken: '{{ csrf_token }}'
       },
       success: function(response) {

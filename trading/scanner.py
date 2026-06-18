@@ -828,6 +828,329 @@ def option_chain_coi_chart(request, symbol_name):
         return JsonResponse({'Error': {str(e)}})
 
 
+@login_required(login_url='/loginpage')
+def nifty_coi_chart(request):
+    symbol_name = "NIFTY"
+    symbol_name_original = symbol_name
+
+    Zerodha = ZerodhaAPI()
+    symbol_name_new = 'NIFTY 50'
+    
+
+    quote_data = Zerodha.kite.quote([f"NSE:{symbol_name_new}"])
+    print(quote_data)
+    print("============ nifty index data===============")
+    symbol_instrument = quote_data[f"NSE:{symbol_name_new}"].get('instrument_token')
+    symbol_lastprice = quote_data[f"NSE:{symbol_name_new}"].get('last_price')
+    #print("quote_data++++++++++++++++",quote_data)
+
+    # get expiry list
+    current_date = datetime.now()
+    current_year = current_date.year
+    current_month = current_date.month
+    index_df = pd.DataFrame()
+    instrument_file = os.path.join(PROJECT_PATH,'astrology','DATA','instruments.csv')
+    instruments_df = pd.read_csv(instrument_file)
+    #print("instruments_df columns=",instruments_df.columns)
+    index_df = instruments_df
+    index_df = index_df[
+            (index_df['exchange'] == 'NFO') &
+            (index_df['segment'] == 'NFO-OPT') &
+            (index_df['name'] == 'NIFTY') &
+            (pd.to_datetime(index_df['expiry']).dt.year == current_year) &
+            (pd.to_datetime(index_df['expiry']).dt.month == current_month)
+        ]
+    index_df['expiry'] = index_df['expiry'].astype(str)
+    expiry_list = index_df['expiry'].unique()
+    print("================expiry list")
+    print(expiry_list)
+    # end  expiry list
+
+    symbols_list = ['NIFTY']
+    if request.GET.get('expiry'):
+        expiry_date = request.GET.get('expiry')
+        #expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+    else:
+        #expiry_date = settings.EXPIRY
+        expiry_date = expiry_list[0]
+
+    print("===================nifty option_chain_coi_chart gajender=",expiry_date)
+    try:
+        now = datetime.now()
+        if request.GET.get('date'):
+            date_str = request.GET.get('date')
+        else:
+            date_str = now.strftime("%Y-%m-%d")
+            #date_str = '2025-08-29'
+        
+        if symbol_name:
+                symbol_name = symbol_name.upper()
+        else:
+            symbol_name = 'ABB'
+        
+        holiday_list = ['2025-11-05','2025-12-25']
+        current_time = datetime.now().time()
+
+        if time(1, 7) <= current_time <= time(9, 14):
+            today = datetime.now().date()-timedelta(days=1)
+        else:
+            today = datetime.now().date()
+            
+        if today.strftime('%Y-%m-%d') in holiday_list:
+            today = today - timedelta(days=1)
+        
+        if request.GET.get('date'):
+            date_str = request.GET.get('date')
+            created_date = pd.to_datetime(date_str).date()
+        else:
+            created_date = today
+        
+        date_range = pd.date_range(start=(today - timedelta(days=7)), end=today, freq='D')
+        date_list = [date.date() for date in date_range]
+        date_list = [d.strftime('%Y-%m-%d') for d in date_list]
+        date_list.reverse()  # Reverse the list to have the most recent date first
+        print(date_list)
+
+        result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
+
+        df = pd.DataFrame.from_records(result.values())
+        if df.empty:
+            context = {
+                'expiry_date':'',
+                'date_str':date_str,
+                'symbol_name' : symbol_name_original,
+                'symbol_list' : symbols_list,
+                'current_price' : '',
+                'df': df,
+                'max_volume_CE':'',
+                'second_largest_volume_CE' : '',
+
+                'time':'',
+                'time_selected':'',
+                'date_list':date_list,
+                
+            }
+            context['chart'] = ''
+            context['total_call_coi'] = ''
+            return render(request, 'trading/index_coi_data_chart.html',context )
+          
+        df = df.sort_values(by='id', ascending=True)
+        # dataframe date format
+        df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%d %H:%M')
+        #add column date and time
+        df['date'] = pd.to_datetime(df['created_at']).dt.date
+        df['time'] = pd.to_datetime(df['created_at']).dt.strftime('%H:%M')
+       
+        #date_unique = df['date'].unique()
+        time_unique = df['time'].unique()
+        time_unique = time_unique.tolist()
+        time_unique.sort( reverse=True)
+        #print(date_unique)
+        #print(time_unique)
+        if request.GET.get('time'):
+            time_selected = request.GET.get('time')
+        else:
+            time_selected = time_unique[0]
+        # list date for last 7 days
+        # Get the current date
+        
+        df = df[df['time'] == time_selected]
+        print(df[['symbol','strike','call_trading_symbol','put_trading_symbol','created_at','date','time','current_price']].head(10))
+        last_price = df['current_price'].values[0]
+        print("last_price=",last_price)
+       
+
+        # df2 = result['df']
+        # print(df2.columns)
+        # print(df2[['strike','CE_oi','CE_prev_oi','CE_change_in_oi','CE_instrument_token']])
+        
+        max_volume_CE = df['call_volume'].max()
+        second_largest_volume_CE = df['call_volume'].sort_values(ascending=False).iloc[1]
+
+        max_volume_PE  = df['put_volume'].max()
+        second_largest_volume_PE = df['put_volume'].sort_values(ascending=False).iloc[1]
+
+        # # for change in oi
+        max_coi_CE = df['call_coi'].max()
+        second_largest_coi_CE = df['call_coi'].sort_values(ascending=False).iloc[1]
+        min_coi_CE = df['call_coi'].min()
+        max_coi_PE  = df['put_coi'].max()
+        second_largest_coi_PE = df['put_coi'].sort_values(ascending=False).iloc[1]
+        min_coi_PE = df['put_coi'].min()
+        max_CE_oi = df['call_oi'].max()
+        second_largest_CE_oi = df['call_oi'].sort_values(ascending=False).iloc[1]
+        min_CE_oi = df['call_oi'].min()
+        max_PE_oi = df['put_oi'].max()
+        second_largest_PE_oi = df['put_oi'].sort_values(ascending=False).iloc[1]
+        min_PE_oi = df['put_oi'].min()
+        
+        
+        
+        #print(df)
+        # get current price
+        
+       
+        df['CE_color'] = df.apply(CE_color,axis=1,args=(last_price,))
+        df['PE_color'] = df.apply(PE_color,axis=1,args=(last_price,)) 
+
+        df['CE_color_volume'] = df.apply(CE_color_volume,axis=1,args=(max_volume_CE, second_largest_volume_CE,last_price))
+        df['PE_color_volume'] = df.apply(PE_color_volume,axis=1,args=(max_volume_PE, second_largest_volume_PE,last_price)) 
+
+        df['CE_color_change_in_oi'] = df.apply(CE_color_change_in_oi,axis=1,args=(max_coi_CE, second_largest_coi_CE, min_coi_CE,last_price))
+        df['PE_color_change_in_oi'] = df.apply(PE_color_change_in_oi,axis=1,args=(max_coi_PE, second_largest_coi_PE, min_coi_PE,last_price)) 
+
+        df['CE_color_total_oi'] = df.apply(CE_color_total_oi, axis=1, args=(
+            max_CE_oi, second_largest_CE_oi, min_CE_oi, last_price))
+        df['PE_color_total_oi'] = df.apply(PE_color_total_oi, axis=1, args=(
+            max_PE_oi, second_largest_PE_oi, min_PE_oi, last_price))
+        
+        #total_call_coi = df['call_coi'].sum()
+        #total_put_coi = df['put_coi'].sum()
+
+        total_call_coi = df.loc[df['call_coi'] > df['current_price'], 'call_coi'].sum()
+        total_put_coi = df.loc[df['put_coi'] < df['current_price'], 'put_coi'].sum()
+        
+        #print(df[['strike','CE_color_total_oi','PE_color_total_oi']])
+        
+        #print(dict)
+        #expiry_list = result['unique_expiry']
+        #######################################################
+        ############# Plotly Chart ############################
+        #######################################################
+        print("=================chart start==================")
+        df_chart = pd.DataFrame.from_records(result.values())
+        df_chart = df_chart.sort_values(by='id', ascending=True)
+        # dataframe date format
+        df_chart['created_at'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%Y-%m-%d %H:%M')
+        #add column date and time
+        df_chart['date'] = pd.to_datetime(df_chart['created_at']).dt.date
+        df_chart['time'] = pd.to_datetime(df_chart['created_at']).dt.strftime('%H:%M')
+        
+        print(df_chart.columns)
+        print(df_chart[['symbol','strike','call_trading_symbol','put_trading_symbol','created_at','date','time','current_price']].head(10))
+
+        # creted date unique values
+        df_final = pd.DataFrame()
+        created_date = df_chart['created_at'].unique()
+        for date in created_date:
+            #print("Created Date:", date)
+            df_date = df_chart[df_chart['created_at'] == date]
+            current_price = df_date['current_price'].iloc[-1]
+            df_call = df_date[(df_date['strike'] >= current_price)]
+            df_put = df_date[(df_date['strike'] <= current_price)]    
+            df_call_put = pd.concat([df_put.tail(3),df_call.head(3)])
+            df_final = pd.concat([df_final, df_call_put])
+        try:
+            # Create bar chart data for call and put COI by time
+            # Group by time and calculate mean COI values
+            df_chart = df_final.copy()
+            time_grouped = df_chart.groupby('time').agg({
+                'call_coi': lambda x: df_chart.loc[x.index, 'call_coi'][df_chart.loc[x.index, 'strike'] > df_chart.loc[x.index, 'current_price']].sum(),
+                'put_coi': lambda x: df_chart.loc[x.index, 'put_coi'][df_chart.loc[x.index, 'strike'] < df_chart.loc[x.index, 'current_price']].sum(),
+                
+                'current_price': 'first',  # Assuming price_time is same for all entries at a given time
+                'call_volume': 'sum' 
+            }).reset_index()
+            # Create the bar chart using Plotly
+            print(time_grouped)
+
+            fig = go.Figure()
+
+            
+            # Add line for call COI
+            fig.add_trace(go.Scatter(
+                x=time_grouped['time'],
+                y=time_grouped['call_coi'],
+                name='Call COI',
+                line=dict(color='green', width=2),
+                mode='lines+markers'  # You can change this to just 'lines' if you prefer no markers
+            ))
+            # Add line for put COI 
+            fig.add_trace(go.Scatter(
+                x=time_grouped['time'],
+                y=time_grouped['put_coi'],
+                name='Put COI',
+                line=dict(color='red', width=2),
+                mode='lines+markers'  # You can change this to just 'lines' if you prefer no markers
+            ))
+            # Add line for current price (assuming you have a 'current_price' column)
+            fig.add_trace(go.Scatter(
+                x=time_grouped['time'],
+                y=time_grouped['current_price'],  # Replace with your actual column name
+                name='Current Price',
+                line=dict(color='blue', width=2),
+                mode='lines+markers',
+                yaxis='y2'  # Use secondary y-axis for price
+            ))
+
+            # Add volume bar chart (row 2, col 1)
+            # fig.add_trace(go.Bar(
+            #     x=time_grouped['time'],
+            #     y=time_grouped['call_volume'],
+            #     name='Call Volume',
+            #     marker_color='rgba(100, 100, 100, 0.6)',  # Gray color with transparency
+            #     opacity=0.7
+            # ), row=2, col=1)
+
+            fig.update_layout(
+                height=600,
+                title='Call vs Put COI and Current Price by Time ',
+                xaxis_title='Time',
+                yaxis_title='Change in Open Interest',
+                yaxis2=dict(
+                    title='Price',
+                    # titlefont=dict(color='blue'),
+                    tickfont=dict(color='blue'),
+                    overlaying='y',
+                    side='right'
+                ),
+                showlegend=True,
+                
+            )
+            chart_html = fig.to_html(full_html=False)
+        except Exception as e:
+            print(f"Error in plotting chart: {e}")
+            chart_html = f"Error in plotting chart: {e}"
+        print("=================chart end==================")
+        #######################################################
+        ############# End Plotly Chart ########################
+        df['call_lots'] = df['call_lots'].astype(int)
+        #print(df[['symbol','call_lots','CE_color_total_oi','PE_color_total_oi']])
+        context = {
+                'expiry_date':expiry_date,
+                'date_str':date_str,
+                'symbol_name' : symbol_name_original,
+                'symbol_list' : symbols_list,
+                'current_price' : last_price,
+                'df': df,
+                'max_volume_CE':max_volume_CE,
+                'second_largest_volume_CE' : second_largest_volume_CE,
+                # 'max_volume_PE':max_volume_PE,
+                # 'second_largest_volume_PE' : second_largest_volume_PE,
+                # 'max_coi_CE':max_coi_CE,
+                # 'second_largest_coi_CE' : second_largest_coi_CE,
+                # 'max_coi_PE':max_coi_PE,
+                # 'second_largest_coi_PE' : second_largest_coi_PE,
+                # 'expiry_list' : expiry_list
+                'time':time_unique,
+                'time_selected':time_selected,
+                'date_list':date_list,
+                'symbol_lastprice':symbol_lastprice,
+                'symbol_instrument':symbol_instrument,
+                'expiry_list':expiry_list
+            }
+        context['chart'] = chart_html
+        context['total_call_coi'] = total_call_coi
+        context['total_put_coi'] = total_put_coi
+       
+        return render(request, 'trading/index_coi_data_chart.html',context )
+
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'Error': {str(e)}})
+
+
 def most_active_contracts(request):
     #print(f"Fetching most active contracts for index: {index}")
     try :
@@ -1188,7 +1511,11 @@ def api_get_oi_data(request):
         date_str = request.GET.get('date', None)
         created_date = pd.to_datetime(date_str).date()
 
-        result = COI.objects.filter(created_at__date=created_date,symbol=symbol_name).order_by('-id')
+        if symbol_name == "NIFTY":
+            expiry_date = request.GET.get('expiry', None)
+            result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
+        else:
+            result = COI.objects.filter(created_at__date=created_date,symbol=symbol_name).order_by('-id')
 
         df = pd.DataFrame.from_records(result.values())
         

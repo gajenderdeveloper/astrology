@@ -81,6 +81,7 @@ CRONJOBS = [
     ('*/1 9-15 * * 1-5', 'trading.cron_test.OrdersDetailStatusUpdate'),
     #('*/1 9-15 * * 1-5', 'trading.cron_test.crose_high_low'),
     ('*/2 9-15 * * 1-5', 'trading.cron.option_chain'),
+    ('*/1 9-15 * * 1-5', 'trading.cron.index_option'),
 
     #('*/2 9-15 * * 1-5', 'trading.cron.ThreadExecutor'),
     
@@ -284,11 +285,12 @@ LOGGING = {
         },
     },
 }
-TODAY_DATE = datetime.now().date()-timedelta(days=1)
+#TODAY_DATE = datetime.now().date()-timedelta(days=2)
+TODAY_DATE = datetime.now().date()
 #TODAY_DATE = "2026-05-15"
 print(TODAY_DATE)
 #EXPIRY = '2026-04-28'
-EXPIRY = '2026-05-26'
+EXPIRY = '2026-06-30'
 # ZERODHA_API_KEY = 'wx9fzilixlw1ihob'
 # ZERODHA_API_SECRET = 'ix2u1lc5pdgxma9mgfflfg16nmma8osp'
 # ZERODHA_ACCESS_TOKEN = ''

@@ -267,9 +267,71 @@ def save_coi_background(instrument_df,symbol,instrument_token,current_price,expi
     except Exception as e:
         logger.error(f"Error saving ChangeInOI records: {str(e)}", exc_info=True)
 
+
+def save_coi_index_background(instrument_df,symbol,instrument_token,current_price,expiry_date):
+    try:
+        instances = []
+        now = timezone.now()
+        for _, row in instrument_df.iterrows():
+            instance = COI_INDEX(
+                symbol=symbol,
+                instrument_token = instrument_token,
+                strike=row['strike'],
+                expiry_date=expiry_date,
+                current_price=current_price,
+                call_trading_symbol = row['CE_tradingsymbol'],
+                call_instrument_token = row['CE_instrument_token'],
+                call_oi = row['CE_oi'],
+                call_coi = row['CE_change_in_oi'],
+                call_coi_percentage = row['CE_change_in_oi_percentage'],
+                call_volume = row['CE_volume'],
+                call_last_price = row['CE_last_price'],
+                call_lots = row['CE_lot_size'],
+                call_pre_oi = row['CE_prev_oi'],
+                call_current_price = row['CE_current_price'],
+                call_day_low = row['CE_day_low'],
+                call_day_high = row['CE_day_high'],
+                call_day_open = row['CE_day_open'],
+
+                put_trading_symbol = row['PE_tradingsymbol'],
+                put_instrument_token = row['PE_instrument_token'],
+                put_oi = row['PE_oi'],
+                put_coi = row['PE_change_in_oi'],
+                put_coi_percentage = row['PE_change_in_oi_percentage'],
+                put_volume = row['PE_volume'],
+                put_last_price = row['PE_last_price'],
+                put_lots = row['PE_lot_size'],
+                put_pre_oi = row['PE_prev_oi'],
+                put_current_price = row['PE_current_price'],
+                put_day_low = row['PE_day_low'],
+                put_day_high = row['PE_day_high'],
+                put_day_open = row['PE_day_open'],
+                
+                created_at=now,
+                
+            )
+            instances.append(instance)
+        
+        # Use transaction for better performance
+        with transaction.atomic():
+            COI_INDEX.objects.bulk_create(instances)
+        
+        #logger.info(f"Successfully saved {len(instances)} ChangeInOI records.")
+    except Exception as e:
+        logger.error(f"Error saving ChangeInOI records: {str(e)}", exc_info=True)
+
 def save_coi(instrument_df,symbol,instrument_token,current_price,expiry_date):
     executor = ThreadPoolExecutor(max_workers=4)
     executor.submit(save_coi_background,instrument_df,symbol,instrument_token,current_price,expiry_date)
+
+
+    return "Submitted to background task"
+
+
+def save_coi_index(instrument_df,symbol,instrument_token,current_price,expiry_date):
+    save_coi_index_background(instrument_df,symbol,instrument_token,current_price,expiry_date)
+    # executor = ThreadPoolExecutor(max_workers=4)
+    # executor.submit(save_coi_index_background,instrument_df,symbol,instrument_token,current_price,expiry_date)
 
 
     return "Submitted to background task"

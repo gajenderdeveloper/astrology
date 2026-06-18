@@ -36,7 +36,10 @@ urlpatterns += [
     path('scanner/pre_market/', scanner.pre_market, name='pre_market'),
     path('scanner/<str:symbol_name>/options/', scanner.option_chain_coi, name='option_chain_coi'),
     path('scanner/<str:symbol_name>/options/chart', scanner.option_chain_coi_chart, name='option_chain_coi_chart'),
+
     path('nse/market-data/most-active-contracts/', scanner.most_active_contracts, name='most_active_contracts'),
+
+    path('NIFTY/options/chart', scanner.nifty_coi_chart, name='nifty_coi_chart'),
 
     path('api/v1/get_instrment/', api.get_instrment, name='get_instrment'),
     path('api/v1/get_quote/', api.get_quote, name='api_get_quote'),

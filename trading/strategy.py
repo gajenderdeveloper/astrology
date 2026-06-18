@@ -71,7 +71,7 @@ def ATH_Strategy(kite,ohlc_df,symbol_df,ltp_data_nfo,ltp_data_nse,ltp_data):
             call = COI_DATA.iloc[-1]['call_coi']
             put = COI_DATA.iloc[-1]['put_coi']
             # for call buy condition
-            coi_confirm = False
+            coi_confirm = True
             if call < put :
                 coi_confirm = True
 
