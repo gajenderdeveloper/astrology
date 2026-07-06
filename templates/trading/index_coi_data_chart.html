@@ -115,7 +115,9 @@
         <thead >
               <tr style="background-color: #3a2c7d;">
                 <th colspan="7" class="text-center text-white">CALLS  </th>
-                <th class="text-center text-white">Price: {{ symbol_lastprice }}</th>
+                <th class="text-center text-white">Price: {{ symbol_lastprice }}
+                  
+                </th>
                 <th colspan="7" class="text-center text-white">PUTS </th>
               </tr>
               
@@ -196,8 +198,12 @@
 
                   
                    <td class="text-center fw-bold"; style="background-color: #FFD580;"">
-                    <a href="#" class="stike" data-symbol="{{ row.symbol }}" data-strike="{{ row|get_item:"strike" }}" data-date="{{ date_str }}" data-expiry="{{ expiry_date }}" data-time="{{ time_selected }}">
-                      {{ row|get_item:"strike"| indian_notation }}</a>
+
+                    <a href="#" class="stike" data-symbol="{{ row.symbol }}" data-strike="{{ row|get_item:"strike" }}" data-date="{{ date_str }}" data-expiry="{{ expiry_date }}" data-time="{{ time_selected }}" id="#{{ row.strike}}">
+                      {{ row|get_item:"strike"| indian_notation }}
+                      
+                    
+                    </a>
                       
                   </td>
 
@@ -276,7 +282,37 @@
   </div>
 </div>
 
-
+<span 
+    id="pcr-badge" 
+    class="" 
+    style="
+      position: fixed;
+      visibility: visible;
+      opacity: 1;
+      /* right: 15px;  → moved to CSS for middle-right */
+      bottom: auto;            /* reset bottom */
+      top: 50%;                /* vertical center */
+      transform: translateY(-50%);
+      z-index: 99999;
+      /* background-color: var(--accent-color);  fallback in CSS */
+      width: 70px;
+      height: 40px;
+      border-radius: 4px;
+      transition: all 0.4s;
+      background-color: #1e2b3c;   /* explicit background */
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+      cursor: default;
+      user-select: none;
+    "
+  >
+    PCR:{{pcr}}
+  </span>
 <script>
 function submitform(value) {
     const date = document.getElementById('dateid').value;
@@ -376,5 +412,8 @@ $('#placeOrderBtn').click(function() {
           }
       });
   });
+  
+  alert("{{ call_strike_scroll }}")
+   $(window).scrollTop($("#{{call_strike_scroll}}").offset().top);
 </script>
 {% endblock %}

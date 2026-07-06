@@ -1,0 +1,25 @@
+ERROR 2026-07-06 10:15:00,482 cron option_chain : KeyError: No data found for NIFTYNXT50. Skipping.
+INFO 2026-07-06 10:15:11,885 cron_test zerodha_place_order : Starting zerodha_place_order job at 2026-07-06 10:15:11.878085
+INFO 2026-07-06 10:15:11,883 cron_test OrdersDetailStatusUpdate : Starting OrdersDetailStatusUpdate job at 2026-07-06 10:15:11.877196
+INFO 2026-07-06 10:15:12,071 cron_test OrdersDetailStatusUpdate : No open orders found
+INFO 2026-07-06 10:15:12,091 cron_test zerodha_place_order : No pending orders found
+INFO 2026-07-06 10:15:12,091 cron_test OrdersDetailsExit : Starting OrdersDetailsExit job at 2026-07-06 10:15:12.091629
+INFO 2026-07-06 10:15:12,111 cron_test OrdersDetailsExit : No open or complted orders found 1  
+INFO 2026-07-06 10:15:13,026 cron nifty_notification : Starting nifty_notification job at 2026-07-06 10:15:13.025972
+INFO 2026-07-06 10:15:13,033 cron nifty_notification : Otion Chain job is running at 10:15:13.033219
+INFO 2026-07-06 10:15:13,033 cron nifty_notification : nifty option notification running at 2026-07-06
+INFO 2026-07-06 10:15:13,045 cron index_option : Starting option_chain_index job at 2026-07-06 10:15:13.045151
+INFO 2026-07-06 10:15:13,090 cron index_option : Otion Chain job is running at 10:15:13.089956
+INFO 2026-07-06 10:15:16,309 cron nifty_notification : nifty option notification total call strike= [24400.0, 24450.0, 24500.0]
+INFO 2026-07-06 10:15:16,314 cron nifty_notification : nifty option notification strike= 24400.0
+INFO 2026-07-06 10:15:16,315 cron nifty_notification : nifty option notification prev coi [103429.0, 106458.0, 108489.0, 109968.0]
+INFO 2026-07-06 10:15:16,315 cron nifty_notification : nifty option notification current coi 112613.0
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification strike= 24450.0
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification prev coi [52979.0, 53942.0, 54531.0, 55107.0]
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification current coi 55747.0
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification strike= 24500.0
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification prev coi [54973.0, 55154.0, 55605.0, 56596.0]
+INFO 2026-07-06 10:15:16,316 cron nifty_notification : nifty option notification current coi 58214.0
+INFO 2026-07-06 10:15:17,065 cron index_option : start_time: 2026-07-06 10:15:13.045151
+INFO 2026-07-06 10:15:17,066 cron index_option : Completed at 2026-07-06 10:15:17.066186
+INFO 2026-07-06 10:15:17,066 cron index_option : Duration: 4.021132 seconds

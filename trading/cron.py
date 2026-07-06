@@ -1170,12 +1170,245 @@ def index_option():
         logger.error("Error in option_chain job: %s", str(e), exc_info=True)
         raise   
 
+def nifty_notification():
+
+    start_time = datetime.now()
+    logger.info("Starting nifty_notification job at %s", start_time)
+    from datetime import time
+    current_time = datetime.now().time()
+    if time(9, 15) <= current_time <= time(15, 30):
+        logger.info(f"Otion Chain job is running at {current_time}")
+    else:
+        logger.info(f"Otion Chain job is not running outside of trading hours {current_time}")
+        return
+    
+    created_date = datetime.now().date()
+    #created_date = datetime.now().date()-timedelta(days=1)
+    logger.info(f"nifty option notification running at {created_date}")
+    symbol_name = "NIFTY"
+    expiry_date = "2026-07-07"
+    result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
+    df = pd.DataFrame.from_records(result.values())
+    df = df.sort_values(by='id', ascending=True)
+    # dataframe date format
+    df['created_at'] = pd.to_datetime(df['created_at']).dt.strftime('%Y-%m-%d %H:%M')
+    #add column date and time
+    df['date'] = pd.to_datetime(df['created_at']).dt.date
+    df['time'] = pd.to_datetime(df['created_at']).dt.strftime('%H:%M')
+    df_pcr = df.groupby('time')['pcr'].mean().reset_index()
+
+    current_price = df['current_price'].iloc[-1]
+
+    # time_unique_sorted = sorted(time_unique)
+    # for time_current in time_unique_sorted:
+    #     df = df[df['time']==time_current]    
+
+    time_unique = df['time'].unique()
+    time_unique = time_unique.tolist()
+    if len(time_unique)<5:
+        return False
+    time_unique.sort( reverse=True)
+    time_selected = time_unique[0]
+    time_unique_5 = time_unique[0:5]
+
+    strike = df['strike'].unique()
+    strike = strike.tolist()
+    #strike.sort( reverse=True)
+
+    call_strike = [x for x in strike if x>current_price]
+    #call_strike_5 = call_strike[0:5]
+    call_strike = call_strike[0:3]
+
+    put_strike = [x for x in strike if x<current_price]
+    #put_strike_5 = put_strike[-6:]
+    put_strike = put_strike[-3:]
+    
+
+
+    # current_df = df[df['time'] == time_selected]
+
+    # total_strike = put_strike + call_strike
+    # current_df = current_df[current_df['strike'].isin(total_strike)]
+    # call_oi = current_df['call_oi'].sum()
+    # put_oi = current_df['put_oi'].sum()
+    # pcr = round(put_oi/call_oi,2)
+
+    df = df[['strike','symbol','expiry_date','call_coi','call_oi','put_coi','put_oi','created_at','date','time','current_price']]
+    # df_call = df[df['strike']>current_price]
+    # df_put = df[df['strike']<current_price]
+
+
+    df = df[df['time'].isin(time_unique_5)]
+    df_call = df[df['strike'].isin(call_strike)]
+    df_put = df[df['strike'].isin(put_strike)]
+
+    # call_last_df = df_call[df_call['time']==time_selected]
+    # call_oi = call_last_df['call_oi'].sum()
+
+    # put_last_df = df_put[df_put['time']==time_selected]
+    # put_oi = put_last_df['put_oi'].sum()
+    # pcr = put_oi/call_oi
+
+
+    # df_call groul by time and get the max coi
+   
+    df_call_1 = df_call.groupby('time').agg({'call_coi': 'sum'}).reset_index()
+    df_put_1 = df_put.groupby('time').agg({'put_coi': 'sum'}).reset_index()
+    # print(df_call_1)
+    # print(df_put_1)
+    if df_call_1.iloc[-2]['call_coi'] < df_put_1.iloc[-2]['put_coi'] and df_call_1.iloc[-1]['call_coi'] > df_put_1.iloc[-1]['put_coi']:
+        print("Put buy")
+        notification = Nifty_notification()
+        notification.symbol = "NIFTY"
+        notification.expiry_date = expiry_date
+        notification.call_coi = df_call_1.iloc[-1]['call_coi']
+        notification.message = "Nifty call cross put"
+        notification.signal = 'Put Buy'
+        notification.save()
+    if df_call_1.iloc[-2]['call_coi'] > df_put_1.iloc[-2]['put_coi'] and df_call_1.iloc[-1]['call_coi'] < df_put_1.iloc[-1]['put_coi']:
+        print("call buy")
+        notification = Nifty_notification()
+        notification.symbol = "NIFTY"
+        notification.expiry_date = expiry_date
+        notification.put_coi = df_put_1.iloc[-1]['put_coi']
+        notification.message = "Nifty put cross call"
+        notification.signal = 'Put Buy'
+        notification.save()
+
+    increased_coi = {}
+    descreased_coi = {}
+    logger.info(f"nifty option notification total call strike= {call_strike}")
+    for strike in call_strike:
+        df_strike = df_call[df['strike']==strike]
+        coi_list = df_strike['call_coi'].tolist()
+        current_coi = coi_list[-1]
+        #current_coi = 1510000
+        pre_coi = coi_list[0:-1]
+        #pre_coi = [x*1.25 for x in pre_coi]
+        any_greater = any(current_coi > item * 1.25 for item in pre_coi)
+
+        logger.info(f"nifty option notification strike= {strike}")
+        logger.info(f"nifty option notification prev coi {pre_coi}")
+        logger.info(f"nifty option notification current coi {current_coi}")
+        print(any_greater)  # False for this data
+        if any_greater:
+            #strike = int(strike)
+            # increased_coi[str(strike)] = {}
+            # increased_coi[str(strike)]['message'] = "call coi is increasing"
+            # increased_coi[str(strike)]['status'] = True
+            logger.info(f"nifty notification********************************")
+            logger.info(f"nifty notification increasing")
+            logger.info(f"strike= {strike}")
+            logger.info(f"current coi = {current_coi}, pre coi= {pre_coi}")
+            #os.system('say "Nifty call increasing"')
+
+            notification = Nifty_notification()
+            notification.symbol = symbol_name
+            notification.expiry_date = expiry_date
+            notification.strike = strike
+            notification.call_coi = current_coi
+            notification.message = "Nifty call increasing"
+            notification.signal = 'Put Buy'
+            notification.save()
+
+        
+        # decrease coi
+        any_less = any(current_coi * 1.20 < item  for item in pre_coi)
+        #print(any_less)  # False for this data
+        if any_less:
+            # strike = int(strike)
+            # descreased_coi[str(strike)] = {}
+            # descreased_coi[str(strike)]['message'] = "call coi is decreasing"
+            # descreased_coi[str(strike)]['status'] = True
+            logger.info(f"nifty notification********************************")
+            logger.info(f"nifty notification decreasing")
+            logger.info(f"strike= {strike}")
+            logger.info(f"current coi = {current_coi}, pre coi= {pre_coi}")
+            #os.system('say "Nifty call decreasing"')
+
+            notification = Nifty_notification()
+            notification.symbol = symbol_name
+            notification.expiry_date = expiry_date
+            notification.strike = strike
+            notification.call_coi = current_coi
+            notification.message = "Nifty call decreasing"
+            notification.signal = 'Call Buy'
+            notification.save()
+
+
+        print("end loop")
+    # logger.info(f"nifty option notification total put strike= {put_strike}")
+    # for strike in put_strike:
+    #     df_strike = df_put[df['strike']==strike]
+    #     coi_list = df_strike['put_coi'].tolist()
+    #     current_coi = coi_list[-1]
+    #     #current_coi = 1510000
+    #     pre_coi = coi_list[0:-1]
+    #     #pre_coi = [x*1.25 for x in pre_coi]
+    #     any_greater = any(current_coi * 1.25 > item  for item in pre_coi)
+
+    #     logger.info(f"nifty option notification strike= {strike}")
+    #     logger.info(f"nifty option notification prev coi {pre_coi}")
+    #     logger.info(f"nifty option notification current coi {current_coi}")
+    #     print(any_greater)  # False for this data
+    #     if any_greater:
+    #         #strike = int(strike)
+    #         # increased_coi[str(strike)] = {}
+    #         # increased_coi[str(strike)]['message'] = "call coi is increasing"
+    #         # increased_coi[str(strike)]['status'] = True
+    #         logger.info(f"nifty notification********************************")
+    #         logger.info(f"nifty put notification increasing")
+    #         logger.info(f"strike= {strike}")
+    #         logger.info(f"current coi = {current_coi}, pre coi= {pre_coi}")
+    #         #os.system('say "Nifty call increasing"')
+
+    #         notification = Nifty_notification()
+    #         notification.symbol = symbol_name
+    #         notification.expiry_date = expiry_date
+    #         notification.strike = strike
+    #         notification.put_coi = current_coi
+    #         notification.message = "Nifty put increasing"
+    #         notification.signal = 'Call Buy'
+    #         notification.save()
+
+        
+    #     # decrease coi
+    #     any_less = any(current_coi  < item * 1.25  for item in pre_coi)
+    #     #print(any_less)  # False for this data
+    #     if any_less:
+    #         # strike = int(strike)
+    #         # descreased_coi[str(strike)] = {}
+    #         # descreased_coi[str(strike)]['message'] = "call coi is decreasing"
+    #         # descreased_coi[str(strike)]['status'] = True
+    #         logger.info(f"nifty notification********************************")
+    #         logger.info(f"nifty put notification decreasing")
+    #         logger.info(f"strike= {strike}")
+    #         logger.info(f"current coi = {current_coi}, pre coi= {pre_coi}")
+    #         #os.system('say "Nifty put decreasing"')
+
+    #         notification = Nifty_notification()
+    #         notification.symbol = symbol_name
+    #         notification.expiry_date = expiry_date
+    #         notification.strike = strike
+    #         notification.put_coi = current_coi
+    #         notification.message = "Nifty put decreasing"
+    #         notification.signal = 'Put Buy'
+    #         notification.save()
+
+
+    #     print("end loop")
+
+    print("=====")
+
+
+
 if __name__ == "__main__":
     # This block is for testing the functions locally
     #test_code()
     #my_scheduled_job()
     #save_instrument()
     #zerodha_save_changein_oi() # save previous OI data
+    
     Change_IN_OI_scanner() # save current OI totla check 
     #check_test()
     #Change_IN_OI_Increasing_Save()
@@ -1184,6 +1417,7 @@ if __name__ == "__main__":
 
     #option_chain()
     #index_option()
+    #nifty_notification()
     # sectior_list = ['NIFTY REALTY']
     # for sector_name in sectior_list:
 
@@ -1194,6 +1428,12 @@ if __name__ == "__main__":
     #     print(datetime.now())
     #     time.sleep(2)
     #     zerodha_place_order()
+
+    #from playsound import playsound
+    # Play the audio file
+    #playsound('notification.mp3')
+    #os.system('say "Task completed"')
+    #os.system('say "nifty increasing"')
 
 
     instrument_df = instruments_df[(instruments_df["segment"] == 'NFO-OPT')]

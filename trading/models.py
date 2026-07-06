@@ -503,6 +503,7 @@ class COI_INDEX(models.Model):
     put_day_low = models.FloatField(default=0)
     put_day_high = models.FloatField(default=0)
     put_day_open = models.FloatField(default=0)
+    pcr = models.FloatField(default=0)
 
 
 
@@ -514,5 +515,28 @@ class COI_INDEX(models.Model):
     class Meta:
         db_table = "coi_data_index"
         verbose_name_plural = "COI INDEX"
+        ordering = ['-created_at']
+
+
+class Nifty_notification(models.Model):
+    id = models.AutoField(primary_key=True)
+    symbol = models.CharField(max_length=50,default='',db_index=True)
+    expiry_date = models.DateField(null=False, blank=False)
+    strike = models.FloatField(default=0)
+    call_coi = models.FloatField(default=0)
+    put_coi = models.FloatField(default=0)
+
+    signal = models.CharField(max_length=20,default='')
+    message = models.TextField(default='')
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True,db_index=True)
+
+    def __str__(self):
+        return self.symbol
+
+    class Meta:
+        db_table = "noifty_notification"
+        verbose_name_plural = "Nifty Notification"
         ordering = ['-created_at']
 

@@ -49,6 +49,8 @@ urlpatterns += [
      path('ajax/nse/market-data/most-active-contracts/', scanner.ajax_most_active_contracts, name='ajax_most_active_contracts'),
     path('ajax/nse/market-data/ajax_chart/', scanner.ajax_chart, name='ajax_chart'),
     path('ajax/nse/market-data/ajax_api_get_oi_data/', scanner.api_get_oi_data, name='api_get_oi_data'),
+
+    path('ajax/get_notification/', scanner.get_notification, name='get_notification'),
     
      
 

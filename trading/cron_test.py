@@ -888,10 +888,19 @@ def pre_post_market_stock():
         logger.error("Error in pre_post_market_stock job: %s", str(e), exc_info=True)
         raise
 
+def bhavcopy_read():
+    df = pd.read_csv(os.path.join(PROJECT_PATH,'astrology','DATA/bhavcopy','ghavcopy_20260703.csv'))
+    expiry = settings.EXPIRY
+    symbol = "RELIANCE"
+    df = df[(df['TckrSymb']==symbol) & (df['XpryDt']==expiry)]
+
+    print("rrr")
+
 if __name__ == "__main__":
     Zerodha = ZerodhaAPI()
     # This block is for testing the functions locally
     #my_scheduled_job()
+    #bhavcopy_read()
 
     #scanner_200ma()
     #zerodha_place_order()

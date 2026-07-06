@@ -269,6 +269,18 @@ def save_coi_background(instrument_df,symbol,instrument_token,current_price,expi
 
 
 def save_coi_index_background(instrument_df,symbol,instrument_token,current_price,expiry_date):
+    call_strike = instrument_df[instrument_df['strike']>current_price]
+    call_strike = call_strike[0:3]
+    #call_strike_list = call_strike['strike'].tolist()
+
+    put_strike = instrument_df[instrument_df['strike']<current_price]
+    put_strike = put_strike[-3:]
+    
+    result = pd.concat([put_strike,call_strike])
+    call_oi = result['CE_oi'].sum()
+    put_oi = result['PE_oi'].sum()
+    pcr = round(put_oi/call_oi,2)
+    
     try:
         instances = []
         now = timezone.now()
@@ -306,7 +318,7 @@ def save_coi_index_background(instrument_df,symbol,instrument_token,current_pric
                 put_day_low = row['PE_day_low'],
                 put_day_high = row['PE_day_high'],
                 put_day_open = row['PE_day_open'],
-                
+                pcr = pcr,
                 created_at=now,
                 
             )

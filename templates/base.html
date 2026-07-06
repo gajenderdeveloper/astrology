@@ -63,6 +63,60 @@
     .navigation {
       margin-bottom: 20px;
     }
+
+    .pcr-badge {
+      position: fixed;
+      right: 15px;            /* distance from right edge */
+      top: 50%;               /* vertical middle */
+      transform: translateY(-50%);  /* perfect centering */
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      background-color: #1e2b3c;   /* fallback (accent-like) */
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+
+      /* original transition / active style */
+      transition: all 0.4s ease;
+      z-index: 99999;
+
+      /* mimic original active state (opacity/visibility) */
+      visibility: visible;
+      opacity: 1;
+
+      /* optional subtle shadow for depth */
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+
+      /* ensure no underline or link behavior */
+      text-decoration: none;
+      cursor: default;        /* not clickable, but keep pointer as default */
+      user-select: none;
+    }
+
+    /* 
+      keep the "active" class effect if needed – 
+      but we keep the style inline as requested.
+      (we also keep the style attribute from the original)
+    */
+    .pcr-badge.active {
+      /* mirror original active style if any, but we already have all */
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* optional hover effect – just for a modern touch (no link) */
+    .pcr-badge:hover {
+      background-color: #2a3f54;
+      transform: translateY(-50%) scale(1.02);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
   </style>
  
 </head>
@@ -70,7 +124,9 @@
 <body class="index-page">
 
   <header id="header" class="header d-flex align-items-center sticky-top">
+    
     <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
+         
 
       <a href="{% url 'home' %}" class="logo d-flex align-items-center me-auto me-xl-0">
         <!-- Uncomment the line below if you also wish to use an image logo -->
@@ -138,16 +194,23 @@
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
+      <!-- <marquee id="myMarquee"  direction="left" behavior="scroll" scrollamount="6" truespeed>
+                ✦ This text moves from left to right ✦
+            </marquee>
+       -->
     </div>
+  
   </header>
 
   <main class="main">
+
 
     {% block inner_html %}{% endblock %}
 
   </main>
 
   <footer id="footer" class="footer">
+
 
     <div class="footer-top">
       <div class="container">
@@ -353,9 +416,32 @@
   </div>
 </div>
 
+<!-- Alert Modal -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="alertModalHeader">
+        <h5 class="modal-title d-flex align-items-center gap-2" id="alertModalLabel">
+          <i class="bi" id="alertModalIcon"></i>
+          <span id="alertModalTitle">Alert</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="alertModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="alertModalOkBtn" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Preloader -->
   <div id="preloader"></div>
+
+
+
+
+
 
   <!-- Vendor JS Files -->
   <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
@@ -371,6 +457,44 @@
 
 
 <script>
+function showAlertModal(message, title, type) {
+  return new Promise((resolve) => {
+    type = type || 'info';
+    var titles = { success: 'Success', danger: 'Error', warning: 'Warning', info: 'Alert' };
+    title = title || titles[type] || 'Alert';
+
+    var configs = {
+      success: { headerClass: 'bg-success text-white', icon: 'bi-check-circle-fill', btnClass: 'btn-success' },
+      danger:  { headerClass: 'bg-danger text-white',  icon: 'bi-exclamation-circle-fill', btnClass: 'btn-danger' },
+      warning: { headerClass: 'bg-warning text-dark',  icon: 'bi-exclamation-triangle-fill', btnClass: 'btn-warning' },
+      info:    { headerClass: 'bg-info text-white',     icon: 'bi-info-circle-fill', btnClass: 'btn-info' }
+    };
+    var config = configs[type] || configs.info;
+
+    $('#alertModalTitle').text(title);
+    $('#alertModalBody').text(message);
+    $('#alertModalIcon').attr('class', 'bi ' + config.icon);
+
+    var header = $('#alertModalHeader');
+    header.removeClass('bg-success bg-danger bg-warning bg-info text-white text-dark');
+    header.addClass(config.headerClass);
+
+    var okBtn = $('#alertModalOkBtn');
+    okBtn.removeClass('btn-success btn-danger btn-warning btn-info btn-primary');
+    okBtn.addClass(config.btnClass);
+
+    // Remove previous click handlers
+    okBtn.off('click');
+    
+    // Add click handler that resolves the promise
+    okBtn.on('click', function() {
+      resolve(true);  // Now resolve is defined in this scope
+    });
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('alertModal')).show();
+  });
+}
+
 //     setTimeout(function () {
 //     window.location.reload(1);
 // }, 120000);  // After 5 secs
@@ -397,7 +521,6 @@
 $(document).ready(function() {
   // Handle click on strike price
   $('.place_order').click(function(e) {
-    alert("Place Order Clicked");
     e.preventDefault();
     $("#tradingsymbol_id").text($(this).data('tradingsymbol'))
     const instrument = $(this).data('instrument')
@@ -449,12 +572,12 @@ $('#placeOrderBtn').click(function() {
       
       // Validate inputs
       if (orderVariant !== 'MARKET' && !price) {
-          alert('Please enter a price');
+          showAlertModal('Please enter a price', 'Validation', 'warning');
           return;
       }
       
       if ((orderVariant === 'SL' || orderVariant === 'SL-M') && !triggerPrice) {
-          alert('Please enter a trigger price');
+          showAlertModal('Please enter a trigger price', 'Validation', 'warning');
           return;
       }
       
@@ -489,15 +612,14 @@ $('#placeOrderBtn').click(function() {
           data: orderData,
           success: function(response) {
               if(response.success) {
-                  
-                  alert('Order placed successfully! Order ID: ' + response.order_id); 
+                  showAlertModal('Order placed successfully! Order ID: ' + response.order_id, 'Success', 'success');
                   $('#instrumentModal').modal('hide');
               } else {
-                  alert('Error: ' + response.error);
+                  showAlertModal(response.error, 'Error', 'danger');
               }
           },
           error: function(xhr, status, error) {
-              alert('Error placing order: ' + error);
+              showAlertModal('Error placing order: ' + error, 'Error', 'danger');
           },
           complete: function() {
               $('#placeOrderBtn').prop('disabled', false);
@@ -608,6 +730,54 @@ $('#placeOrderBtn').click(function() {
     $('#chartstrikeModal').modal("show");
 
   })
+
+
+  //showAlertModal('Notification', 'Notification', 'info');
+
+  function notification() {
+        console.log("This runs automatically every 60 seconds.");
+        // Your jQuery code goes here
+        $.ajax({
+        url: "{% url 'get_notification' %}",
+        method: 'GET', 
+        data: {
+          //instrument: "0000",
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+          if(response.status=='ok') {debugger;
+            // Update strike price input with last traded price
+            title = "NOTIFICATION"
+            type = "info"
+            message = response.notification[0]['message']
+
+            //showAlertModal(message, title, type)
+
+            showAlertModal(message, title, type)
+              .then(() => {
+                // This code runs when OK is clicked
+                console.log('User clicked OK');
+               
+                // Do your work here
+                update_notification();
+              });
+          
+          } else {
+            console.error('Error fetching quote:', response.error);
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('API call failed:', error);
+        }
+      });
+        
+    }
+
+    // 2. Run it immediately on page load
+    notification();
+
+    // 3. Repeat it every 1 minute (60,000 milliseconds)
+    setInterval(notification, 60000);
 </script>
 
 </body>

@@ -72,8 +72,8 @@ def ATH_Strategy(kite,ohlc_df,symbol_df,ltp_data_nfo,ltp_data_nse,ltp_data):
             put = COI_DATA.iloc[-1]['put_coi']
             # for call buy condition
             coi_confirm = True
-            if call < put :
-                coi_confirm = True
+            # if call < put :
+            #     coi_confirm = True
 
             order_confirmed = False
             if strategy == 'ATH' and last_row['close'] > symbol_price:
@@ -155,8 +155,14 @@ def ATH_Strategy(kite,ohlc_df,symbol_df,ltp_data_nfo,ltp_data_nse,ltp_data):
 
                 
             else:
-                logger.info(f"Skipping order for {tradingsymbol}-{parent_symbol} as last close price {last_row['close']} is not greater than {symbol_price}")
-                logger.info(f" {coi_confirm } and put{put} > call{call}")
+                if strategy == "ATH":
+                    logger.info(f"{strategy} Skipping order for {tradingsymbol}-{parent_symbol} as last close price {last_row['close']} is not greater than {symbol_price}")
+                    logger.info(f" {coi_confirm } and put{put} > call{call}")
+                else:
+                    logger.info(f"{strategy} Skipping order for {tradingsymbol}-{parent_symbol} as last close price {last_row['close']} is not less than {symbol_price}")
+                    logger.info(f" {coi_confirm } and put{put} > call{call}")
+
+
         except Exception as e:
             logger.error(f"Error placing order for {tradingsymbol}: {str(e)}")      
         

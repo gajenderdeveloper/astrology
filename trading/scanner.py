@@ -958,6 +958,13 @@ def nifty_coi_chart(request):
         print(df[['symbol','strike','call_trading_symbol','put_trading_symbol','created_at','date','time','current_price']].head(10))
         last_price = df['current_price'].values[0]
         print("last_price=",last_price)
+
+        strike = df['strike'].unique()
+        strike = strike.tolist()
+        call_strike = [x for x in strike if x>last_price]
+        #print(call_strike)
+        call_strike_scroll = call_strike[0]
+        #print(call_strike_scroll)
        
 
         # df2 = result['df']
@@ -1040,6 +1047,7 @@ def nifty_coi_chart(request):
             df_put = df_date[(df_date['strike'] <= current_price)]    
             df_call_put = pd.concat([df_put.tail(3),df_call.head(3)])
             df_final = pd.concat([df_final, df_call_put])
+        
         try:
             # Create bar chart data for call and put COI by time
             # Group by time and calculate mean COI values
@@ -1115,6 +1123,7 @@ def nifty_coi_chart(request):
         #######################################################
         ############# End Plotly Chart ########################
         df['call_lots'] = df['call_lots'].astype(int)
+        pcr = df.iloc[-1]['pcr']
         #print(df[['symbol','call_lots','CE_color_total_oi','PE_color_total_oi']])
         context = {
                 'expiry_date':expiry_date,
@@ -1138,10 +1147,14 @@ def nifty_coi_chart(request):
                 'symbol_lastprice':symbol_lastprice,
                 'symbol_instrument':symbol_instrument,
                 'expiry_list':expiry_list
+                
             }
         context['chart'] = chart_html
         context['total_call_coi'] = total_call_coi
         context['total_put_coi'] = total_put_coi
+        context['call_strike_scroll'] = call_strike_scroll
+        context['pcr'] = pcr
+
        
         return render(request, 'trading/index_coi_data_chart.html',context )
 
@@ -1533,6 +1546,38 @@ def api_get_oi_data(request):
         df = df[['symbol','strike','call_coi','put_coi','created_at','date','time','current_price','call_current_price']]
         data = df.to_dict(orient='records')
         print("data===================",data)
+        return JsonResponse(data, safe=False)
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'Error': {str(e)}})
+    
+def get_notification(request):
+    try:
+        print("==========notifications==========")
+        #symbol_name = request.GET.get('symbol', None)
+       
+        created_date = datetime.now().date()
+        # date_str = request.GET.get('date', None)
+        # created_date = pd.to_datetime(date_str).date()
+        print(created_date)
+
+        notifications = Nifty_notification.objects.filter(created_at__date=created_date,is_read=False).order_by('-id').values()
+        notifications = list(notifications)
+        #print(notifications[0]['call_coi'])
+        data = {}
+        if len(notifications)>0:
+            data['status'] = "ok"
+            data['notification'] = notifications
+            message = notifications[0]['message']
+            created_datetime = notifications[0]['created_at']
+            updated_count = Nifty_notification.objects.filter(is_read=False).update(is_read=True)
+            
+            os.system(f'say "{message}"')
+
+        else:
+            data['status'] = 'notok'
+
         return JsonResponse(data, safe=False)
         
     except Exception as e:
