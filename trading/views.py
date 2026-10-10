@@ -444,17 +444,17 @@ def nse_option_2(request, stock_name):
     # # Initialize the API
     # Get list of available symbols from the database
     
-
+    return JsonResponse({'msg': "this is api "})
     
     for stock_name in symbol_list_new:
         
         try:
             # Create NSEOptions instance
             print(stock_name)
-            oc = NSEOptionChain(symbol=stock_name)
+            oc = NSEOptionChain(symbol=stock_name,expiry="29-Sep-2026")
             data = oc.fetch_data()
-            print("====================",stock_name)
-            #print(data['records']['data'])
+            print("====================gajender nse",stock_name)
+            print(data['records']['data'])
             
             if data and 'records' in data:
                 # Get current price

@@ -472,7 +472,7 @@ class COI_INDEX(models.Model):
     id = models.AutoField(primary_key=True)
     symbol = models.CharField(max_length=50,default='',db_index=True)
     instrument_token = models.CharField(max_length=50,default='')
-    expiry_date = models.DateField(null=False, blank=False)
+    expiry_date = models.DateField(null=False, blank=False,db_index=True)
     strike = models.FloatField(default=0)
     current_price = models.FloatField(default=0)
 
@@ -504,6 +504,7 @@ class COI_INDEX(models.Model):
     put_day_high = models.FloatField(default=0)
     put_day_open = models.FloatField(default=0)
     pcr = models.FloatField(default=0)
+    open_price = models.FloatField(default=0)
 
 
 
@@ -516,6 +517,11 @@ class COI_INDEX(models.Model):
         db_table = "coi_data_index"
         verbose_name_plural = "COI INDEX"
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['created_at', 'symbol', 'expiry_date']),
+            # Or for just the date part (PostgreSQL)
+            # models.Index(fields=['symbol', 'expiry_date'], name='coi_lookup_idx'),
+        ]
 
 
 class Nifty_notification(models.Model):
@@ -539,4 +545,36 @@ class Nifty_notification(models.Model):
         db_table = "noifty_notification"
         verbose_name_plural = "Nifty Notification"
         ordering = ['-created_at']
+
+
+class NiftyOrder(models.Model):
+    id = models.AutoField(primary_key=True)
+    symbol = models.CharField(max_length=50,default='',db_index=True)
+    buy_price = models.FloatField(default=0)
+    sell_price = models.FloatField(default=0)
+    profit = models.FloatField(default=0)
+    profit_type = models.CharField(max_length=20,default='')
+    order_type = models.CharField(max_length=20, choices=[
+                    ('BUY', 'Buy'),
+                    ('SELL', 'Sell')],  default='BUY')
+    order_option = models.CharField(max_length=20, choices=[
+                    ('CE', 'CE'),
+                    ('PE', 'PE')],  default='CE')
+
+    status = models.CharField(max_length=20, choices=[
+                    ('PENDING', 'PENDING'),
+                    ('COMPLETED', 'COMPLETED')], default='PENDING')
+    
+    buy_time = models.CharField(max_length=20,default='')
+    sell_time = models.CharField(max_length=20,default='')
+    created_at = models.DateTimeField(auto_now_add=True,db_index=True)
+
+    def __str__(self):
+        return self.symbol
+
+    class Meta:
+        db_table = "nifty_order"
+        verbose_name_plural = "Nifty Order"
+        ordering = ['-created_at']
+    
 

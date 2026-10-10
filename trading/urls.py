@@ -41,6 +41,8 @@ urlpatterns += [
 
     path('NIFTY/options/chart', scanner.nifty_coi_chart, name='nifty_coi_chart'),
 
+    path('bhavcopy/<str:symbol_name>/options/chart', scanner.bhavcopy, name='bhavcopy'),
+
     path('api/v1/get_instrment/', api.get_instrment, name='get_instrment'),
     path('api/v1/get_quote/', api.get_quote, name='api_get_quote'),
     path('api/v1/place_order/', api.place_order, name='api_place_order'),

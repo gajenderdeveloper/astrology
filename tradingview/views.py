@@ -162,6 +162,7 @@ def ajax_option_chain(request):
             )
             chart_html = fig.to_html(full_html=True)
             last_price = df_oi['current_price'].values[0]
+            df_oi = decrease_strike(df_oi,last_price,10)
             context = {
                 'df_oi': df_oi,
                 'current_price' : last_price,

@@ -7,7 +7,9 @@ import pandas as pd
 #from .options_data import get_formatted_options_chain
 import yfinance as yf
 from .get_options_data import get_specific_expiration
-from .nse_options import NSEOptions, NSEOptionChain
+#from .nse_options import NSEOptions, NSEOptionChain
+from trading.nse_options import NSEOptions, NSEOptionChain
+from django.conf import settings
 from django.http import HttpResponse
 from django.http import JsonResponse
 symbol_list_new = [
@@ -367,7 +369,8 @@ def nse_option(request, stock_name):
     # List of available NSE indices
     #symbol_list = ['NIFTY', 'BANKNIFTY', 'FINNIFTY','ACC']
     symbol_list = symbol_list_new
-    expiry_date = '29-May-2025'
+    expiry_date = settings.NSE_EXPIRY
+    #expiry_date = "29-Sep-2026"
     
     try:
         # Create NSEOptions instance
@@ -376,9 +379,12 @@ def nse_option(request, stock_name):
         # Get option chain data
         #data = nse.get_option_chain(stock_name)
 
-        oc = NSEOptionChain(symbol=stock_name)
-        data = oc.fetch_data(expiry_date=expiry_date, starting_strike_price=None)
-        #print(data['records']['data'])
+        # oc = NSEOptionChain(symbol=stock_name)
+        # data = oc.fetch_data(expiry_date=expiry_date, starting_strike_price=None)
+
+        oc = NSEOptionChain(symbol=stock_name,expiry=expiry_date)
+        data = oc.fetch_data()
+        # print(data['records']['data'])
         
         if data and 'records' in data:
             # Get current price
@@ -387,27 +393,30 @@ def nse_option(request, stock_name):
             
             # Process the data into a DataFrame
             # Get list of expiration dates
-            expirations = []
-            for item in data['records']['data']:
-                if 'expiryDate' in item:
-                    if item['expiryDate'] not in expirations:
-                        expirations.append(item['expiryDate'])
-            # dates = [datetime.datetime.strptime(ts, "%Y-%m-%d") for ts in expirations]
+            #expirations = []
+            # for item in data['records']['data']:
+            #     if 'expiryDate' in item:
+            #         if item['expiryDate'] not in expirations:
+            #             expirations.append(item['expiryDate'])
+            # # dates = [datetime.datetime.strptime(ts, "%Y-%m-%d") for ts in expirations]
+            # # dates.sort()
+            # # Convert expiration dates to datetime for proper sorting
+            # dates = [datetime.datetime.strptime(ts, "%d-%b-%Y") for ts in expirations]
             # dates.sort()
-            # Convert expiration dates to datetime for proper sorting
-            dates = [datetime.datetime.strptime(ts, "%d-%b-%Y") for ts in expirations]
-            dates.sort()
             # Convert back to original format
-            expirations = [dt.strftime("%d-%b-%Y") for dt in dates]
+            #expirations = [dt.strftime("%d-%b-%Y") for dt in dates]
             
-            print(expirations)
+            #print("expirations=",expirations)
             # Get expiry from request params or use first available
             #expiry = request.GET.get('expiry', expirations[0] if expirations else None)
-            if request.GET.get('expiry'):
-                expiry = request.GET.get('expiry')
-            else:
-                expiry = expirations[0]
+            # if request.GET.get('expiry'):
+            #     expiry = request.GET.get('expiry')
+            # else:
+            #     expiry = data['records']['data']['expiryDates']
+            expiry = expiry_date
             options_data = []
+            print("expiry==",expiry)
+            print("records-data",data['records']['data'])
             for item in data['records']['data']:
                 strike = item['strikePrice']
                 ce_data = item.get('CE', {})
@@ -415,12 +424,12 @@ def nse_option(request, stock_name):
                 
                 # Skip if expiry date doesn't match
                 #print(ce_data.get('openInterest', 0))
-                if item['expiryDate'] != expiry:
+                
+                if item['expiryDates'] != expiry:
                     continue
                 #print(item)
                 #print(ce_data)
-
-                
+       
                 options_data.append({
                     'strike': strike,
                     'openInterest_x': ce_data.get('openInterest', 0),
@@ -447,6 +456,7 @@ def nse_option(request, stock_name):
                 })
             
             df = pd.DataFrame(options_data)
+            print("df===",df)
 
             if not df.empty:
                 # Find the strike price closest to current price
@@ -478,7 +488,7 @@ def nse_option(request, stock_name):
             return render(request, 'nse_option_chain.html', {
                 'expiry':expiry,
                 'symbol_list': symbol_list,
-                'expirations':expirations,
+                'expirations':[],
                 'stock_name': stock_name,
                 'current_price': current_price,
                 'df': df,

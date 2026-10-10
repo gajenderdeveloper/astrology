@@ -61,7 +61,8 @@ INSTALLED_APPS = [
     'rest_framework',
     "rest_framework.authtoken",
     #'polls',
-    'tradingview'
+    'tradingview',
+    'market_game_plan'
     
 
 ] 
@@ -78,8 +79,9 @@ CRONJOBS = [
     ('*/1 9-15 * * 1-5', 'trading.cron_test.zerodha_place_order'),
 
     #('*/1 9-15 * * 1-5', 'trading.cron_test.OrdersDetailUpdate'),
-    ('*/1 9-15 * * 1-5', 'trading.cron_test.OrdersDetailStatusUpdate'),
-    #('*/1 9-15 * * 1-5', 'trading.cron_test.crose_high_low'),
+    # ('*/1 9-15 * * 1-5', 'trading.cron_test.OrdersDetailStatusUpdate'),
+    # ('*/3 9-15 * * 1-5', 'trading.cron_test.crose_high_low'),
+
     ('*/2 9-15 * * 1-5', 'trading.cron.option_chain'),
     ('*/1 9-15 * * 1-5', 'trading.cron.index_option'),
     
@@ -293,7 +295,8 @@ TODAY_DATE = datetime.now().date()
 #TODAY_DATE = "2026-05-15"
 print(TODAY_DATE)
 #EXPIRY = '2026-04-28'
-EXPIRY = '2026-07-28'
+EXPIRY = '2026-09-29'
+NSE_EXPIRY = "29-Sep-2026"
 # ZERODHA_API_KEY = 'wx9fzilixlw1ihob'
 # ZERODHA_API_SECRET = 'ix2u1lc5pdgxma9mgfflfg16nmma8osp'
 # ZERODHA_ACCESS_TOKEN = ''

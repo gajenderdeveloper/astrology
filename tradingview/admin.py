@@ -4,7 +4,7 @@ from .models import Sector,SectorSymbol
 # Register your models here.
 
 class SectorAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['id','name']
     search_fields = ['name']
     def has_delete_permission(self, request, obj=None):
         # Disable delete

@@ -47,40 +47,52 @@ class NSEOptions:
         print(f"Data saved to {filename}")
 
 class NSEOptionChain():
-    def __init__(self, symbol='NIFTY', timeout=5) -> None:
+    def __init__(self, symbol='NIFTY', expiry="29-Sep-2026", timeout=5) -> None:
+        self.symbol = symbol
+        self.expiry = expiry
+        self.timeout = timeout
+        
+        # URL for option chain - v3 endpoint
         if symbol == 'NIFTY':
-            self.__url = "https://www.nseindia.com/api/option-chain-indices?symbol={}".format(symbol)
+            self.__url = "https://www.nseindia.com/api/option-chain-v3?symbol={}".format(symbol)
         else:
-            self.__url = "https://www.nseindia.com/api/option-chain-equities?symbol={}".format(symbol)
+            self.__url = "https://www.nseindia.com/api/option-chain-v3?type=Equity&symbol={}&expiry={}".format(symbol, expiry)
+        
         self.__session = requests.sessions.Session()
-        self.__session.headers = {
+        self.__session.headers.update({
             "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
-            "Accept": "*/*", "Accept-Language": "en-US,en;q=0.5"}
-        self.__timeout = timeout
-        self.__session.get("https://www.nseindia.com/option-chain", timeout=self.__timeout)
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Referer": "https://www.nseindia.com/option-chain"  # Required to avoid 403
+        })
+        
+        # Proper session handshake: visit homepage first to get cookies
+        self.__session.get("https://www.nseindia.com", timeout=self.timeout)
+        # Then visit the option chain page to establish the nseappid cookie
+        self.__session.get("https://www.nseindia.com/option-chain", timeout=self.timeout)
 
     def fetch_data(self):
         try:
-            data = self.__session.get(url=self.__url, timeout=self.__timeout)
-            data = data.json()
-            # df = pd.json_normalize(data['records']['data'])
-
-            # if expiry_date != None:
-            #     df = df[(df.expiryDate == expiry_date)]
-            # df.reset_index(drop=True, inplace=True)
-
-            # starting_strike_price = df['CE.underlyingValue'][7]
-            # if starting_strike_price == None:
-            #     starting_strike_price = df['CE.underlyingValue'][8]
-            # if starting_strike_price == None:
-            #     starting_strike_price = df['CE.underlyingValue'][9]
-            return data
+            data = self.__session.get(url=self.__url, timeout=self.timeout)
+            
+            # Check for 401/403 before parsing JSON
+            if data.status_code != 200:
+                print(f"HTTP Error: {data.status_code}")
+                print(f"Response: {data.text[:200]}")  # Print first 200 chars for debugging
+                return None
+            
+            # Check if response is JSON before parsing
+            if 'application/json' not in data.headers.get('Content-Type', ''):
+                print("Response is not JSON. NSE may be blocking or returning HTML.")
+                print(f"Content-Type: {data.headers.get('Content-Type')}")
+                return None
+                
+            return data.json()
+            
         except Exception as ex:
-            print(self.__url)
-            #print(df)
-            print('Error: {}'.format(ex))
-            self.__session.get("https://www.nseindia.com/option-chain", timeout=self.__timeout)
-
+            print(f"URL: {self.__url}")
+            print(f'Error: {ex}')
+            return None
     
 class MostActiveContracts:
     def __init__(self, index='calls-stocks-vol', timeout=5) -> None:
@@ -210,6 +222,15 @@ def main():
                     print("---")
 
 if __name__ == "__main__":
-    #main() 
-    oc = NSEOptionChain(symbol='ACC')
-    data = oc.fetch_data(expiry_date='29-May-2025', starting_strike_price=None)
+    # For equity options like ACC, the expiry must be valid
+    oc = NSEOptionChain(symbol='ABB', expiry='29-Sep-2026')
+    print(f"Fetching data for ACC...")
+    data = oc.fetch_data()
+    
+    if data:
+        print("Data fetched successfully!")
+        print(f"Records count: {len(data.get('records', {}).get('data', []))}")
+        d = data['records']['data']
+        
+    else:
+        print("Failed to fetch data")

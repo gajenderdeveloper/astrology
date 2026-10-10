@@ -43,7 +43,7 @@ from ZERODHA_API.zerodha_integration import ZerodhaAPI
 from trading.models import Change_IN_OI_Increasing,ScaningStockOI,Orders,Scanner_ema,COI
 from trading.nse_options import MostActiveContracts
 import requests
-from trading.function import generate_stock_chart
+from trading.function import *
 
 from tradingview.models import Sector,SectorSymbol
 
@@ -609,12 +609,12 @@ def Change_IN_OI_Increasing_Save():
         logger.error("Error in Change_IN_OI_Increasing_Save job: %s", str(e), exc_info=True)
         raise
 
-@crone_time
+#@crone_time
 def check_test():
     time.sleep(2)
     print("test")
 
-@crone_time
+#@crone_time
 def Change_IN_OI_scanner():
     """
     Function to check if Change in OI is increasing
@@ -1115,6 +1115,7 @@ def index_option():
         current_date = datetime.now()
         current_year = current_date.year
         current_month = current_date.month
+        #current_month = 8
 
         # Apply filters including current month and year
         index_df = index_df[
@@ -1186,7 +1187,7 @@ def nifty_notification():
     #created_date = datetime.now().date()-timedelta(days=1)
     logger.info(f"nifty option notification running at {created_date}")
     symbol_name = "NIFTY"
-    expiry_date = "2026-07-07"
+    expiry_date = "2026-09-08"
     result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
     df = pd.DataFrame.from_records(result.values())
     df = df.sort_values(by='id', ascending=True)
@@ -1399,15 +1400,98 @@ def nifty_notification():
     #     print("end loop")
 
     print("=====")
+def event_calender():
+    df = pd.read_csv(os.path.join(PROJECT_PATH, 'astrology', 'DATA/result_stock', 'CF-Event-equities.csv'))
+    df.columns = df.columns.str.strip('\n')
+    df.columns = df.columns.str.strip(' ')
+    df['DATE1'] = pd.to_datetime(df['DATE']).dt.strftime('%Y-%m-%d')
+    df[df['DATE1']=='2026-08-10']
+    print(df)
+
+    
+def get_moneycontrol_earnings():
+    """
+    Fetches earnings data from the Moneycontrol API for a specific date.
+    Returns a pandas DataFrame with the earnings data.
+    """
+    # Define the API URL with parameters
+    url = "https://api.moneycontrol.com/mcapi/v1/earnings/get-earnings-data"
+    
+    # Parameters for the API request
+    params = {
+        "indexId": "All",
+        "page": 1,
+        "startDate": "2026-08-12",
+        "endDate": "2026-08-12",
+        "sector": "",
+        "limit": 18
+    }
+    try:
+       
+        session = requests.Session()
+        session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        })
+        response = session.get(
+                        "https://api.moneycontrol.com/mcapi/v1/earnings/get-earnings-data",
+                        params=params
+                    )
+        data = response.json()
+        
+        # Check if the request was successful
+        if data.get("success") == 1:
+            # Extract the list of earnings records
+            earnings_list = data.get("data", {}).get("list", [])
+            
+            if earnings_list:
+                # Convert the list of dictionaries to a pandas DataFrame
+                df = pd.DataFrame(earnings_list)
+                
+                # Rename columns for better readability
+                df = df.rename(columns={
+                    'stockName': 'Stock Name',
+                    'scId': 'Scrip ID',
+                    'resultType': 'Result Type',
+                    'ltp': 'LTP',
+                    'change': 'Change (%)',
+                    'marketCap': 'Market Cap (Cr)',
+                    'exchange': 'Exchange'
+                })
+                
+                # Convert market cap to numeric
+                df['Market Cap (Cr)'] = pd.to_numeric(df['Market Cap (Cr)'], errors='coerce')
+                if not df.empty:
+                    print(f"Retrieved {len(df)} earnings records for 12-Aug-2026")
+                    print("\nData Preview:")
+                    print(df[['Stock Name', 'LTP', 'Change (%)', 'Market Cap (Cr)', 'Result Type']].head(5))
+                
+                
+            else:
+                print("No earnings data found for the specified date.")
+                return pd.DataFrame()
+        else:
+            print(f"API returned an error: {data}")
+            return pd.DataFrame()
+            
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data from API: {e}")
+        return pd.DataFrame()
+    except ValueError as e:
+        print(f"Error parsing JSON response: {e}")
+        return pd.DataFrame()
+
 
 
 
 if __name__ == "__main__":
     # This block is for testing the functions locally
+    
+    #event_calender()
+    #get_moneycontrol_earnings()
     #test_code()
     #my_scheduled_job()
     #save_instrument()
-    #zerodha_save_changein_oi() # save previous OI data
+    zerodha_save_changein_oi() # save previous OI data
     
     Change_IN_OI_scanner() # save current OI totla check 
     #check_test()

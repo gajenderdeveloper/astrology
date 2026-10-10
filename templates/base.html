@@ -32,7 +32,7 @@
   <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
 
       <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+<!-- <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script> -->
   <script src="https://unpkg.com/htmx.org"></script>
 
   <style>
@@ -117,6 +117,40 @@
       transform: translateY(-50%) scale(1.02);
       box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
     }
+
+    .notification {
+      width: 100%;
+      background-color: #0dcaf0;
+      color: #000;
+      overflow: hidden;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .notification-content {
+      display: inline-block;
+      white-space: nowrap;
+      padding: 8px 0;
+      animation: notification-scroll 25s linear infinite;
+    }
+
+    .notification-content p {
+      display: inline-block;
+      margin: 0;
+      padding: 0 32px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .notification-content p:not(:last-child)::after {
+      content: "•";
+      margin-left: 32px;
+      opacity: 0.6;
+    }
+
+    @keyframes notification-scroll {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
   </style>
  
 </head>
@@ -128,12 +162,16 @@
     <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
          
 
-      <a href="{% url 'home' %}" class="logo d-flex align-items-center me-auto me-xl-0">
-        <!-- Uncomment the line below if you also wish to use an image logo -->
-        <!-- <img src="{% static 'assets/img/logo.png' %}" alt=""> -->
-        <h1 class="sitename">Trading</h1>
-        <span>.</span>
-      </a>
+     
+       
+        <h1 class="">Trading</h1>
+        <!-- <marquee id="myMarquee"  direction="left" behavior="scroll" scrollamount="6" truespeed>
+                ✦ This text moves from left to right ✦
+            </marquee> -->
+        
+     
+        
+     
 
       <nav id="navmenu" class="navmenu">
         <ul>
@@ -150,35 +188,16 @@
           </li>
           {% endif %}
 
-          <li class="dropdown"><a href="#"><span>Horoscopes</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-            <ul>
-              <!-- <li><a href="{% url 'horoscope' horoscope_slug %}">Love and Relationship</a></li> -->
-             <!-- <li class="dropdown"><a href="#"><span>Deep Dropdown</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
-                <ul>
-                  <li><a href="#">Deep Dropdown 1</a></li>
-                  <li><a href="#">Deep Dropdown 2</a></li>
-                  <li><a href="#">Deep Dropdown 3</a></li>
-                  <li><a href="#">Deep Dropdown 4</a></li>
-                  <li><a href="#">Deep Dropdown 5</a></li>
-                </ul>
-              </li>-->
-
-            {%if header %}
-        	 {% for horoscope in header %}
-
-              <li><a href="{% url 'horoscope' horoscope.slug %}">{{horoscope.name}}</a></li>
-
-              {% endfor %}
-            {% endif %}  
-
-            </ul>
+          <li ><a href="{% url 'bhavcopy' 'ABB'  %}"><span>Bhavcopy</span> </a>
+            
           </li>
           <!-- <li><a href="{% url 'horoscope' horoscope_slug  %}">Horoscopes</a></li> -->
           <li><a href="{% url 'nifty_coi_chart'  %}">NIFTY</a></li>
-          <li><a href="{% url 'appointment'  %}">Appointment</a></li>
-          <li><a href="{% url 'price'  %}">Pricing</a></li>
+          <!-- <li><a href="{% url 'appointment'  %}">Appointment</a></li>
+          <li><a href="{% url 'price'  %}">Pricing</a></li> -->
           <li class="dropdown"><a href="#"><span>Option Chain</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
+                  <li><a href="{% url 'nse_option' 'ABB' %}">NSE Option Chain</a></li>
                   <li><a href="{% url 'oi_option' 'ABB' %}">Option Chain</a></li>
                   
                   <li><a href="{% url 'option_chain' 'TSLS' %}">Yahoo Option Chain</a></li> 
@@ -199,6 +218,7 @@
             </marquee>
        -->
     </div>
+
   
   </header>
 
@@ -210,63 +230,6 @@
   </main>
 
   <footer id="footer" class="footer">
-
-
-    <div class="footer-top">
-      <div class="container">
-        <div class="row gy-4">
-          <div class="col-lg-4 col-md-6 footer-about">
-            <a href="{% url 'home' %}" class="logo d-flex align-items-center">
-              <span class="sitename">Astro</span>
-            </a>
-            <div class="footer-contact pt-3">
-              <p>A108 Adam Street</p>
-              <p>New York, NY 535022</p>
-              <p class="mt-3"><strong>Phone:</strong> <span>+1 5589 55488 55</span></p>
-              <p><strong>Email:</strong> <span>info@example.com</span></p>
-            </div>
-          </div>
-
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Useful Links</h4>
-            <ul>
-              <li><a href="{% url 'home' %}">Home</a></li>
-              <li><a href="{% url 'about-us' %}">About</a></li>
-              <li><a href="appoinmemt.html">Appointment</a></li>
-             
-            </ul>
-          </div>
-
-          <!-- <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Our Services</h4>
-            <ul>
-              <li><a href="love-and-relationship.html">Love And Relationships</a></li>
-              <li><a href="financial-outlook.html">Financial Outlook</a></li>
-              <li><a href="property.html">Property</a></li>
-            </ul>
-          </div>
-
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Our Services</h4>
-            <ul>
-              <li><a href="child-related.html">Child Related</a></li>
-              <li><a href="health.html">Health</a></li>
-              <li><a href="legal-cases.html">Legal Cases</a></li>
-            </ul>
-          </div> -->
-
-          <div class="col-lg-2 col-md-3 footer-links">
-            <h4>Our Terms</h4>
-            <ul>
-              <li><a href="{% url 'terms-and-Conditions' %}">Terms and Cancellation Policy</a></li>
-              <li><a href="{% url 'refund-policy' %}">Refund policy</a></li>
-              <li><a href="{% url 'privacy-policy' %}">Privacy policy</a></li>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-    </div>
 
     <div class="copyright text-center">
       <div class="container d-flex flex-column flex-lg-row justify-content-center justify-content-lg-between align-items-center">

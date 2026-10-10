@@ -32,6 +32,8 @@ from trading.models import Change_IN_OI_Increasing,ScaningStockOI,Orders,Scanner
 
 from concurrent.futures import ThreadPoolExecutor
 from asyncio import create_task, sleep
+from trading.function import *
+from tradingview.models import SectorSymbol,Sector
 
 PROJECT_PATH = os.path.dirname(settings.BASE_DIR)
 instrument_file = os.path.join(PROJECT_PATH,'astrology','DATA','instruments.csv')
@@ -656,33 +658,49 @@ def crose_high_low(Zerodha=None):
     try:
         from datetime import time
         start_time = datetime.now()
+        logger.info("Starting crose_high_low job at %s", start_time)
         current_time = datetime.now().time()
-        # if time(9, 16) <= current_time <= time(9, 30):
-        #     logger.info(f"Crose high low job is running at {current_time}")
+        if time(9,30) <= current_time <= time(22, 30):
+            logger.info(f"Crose high low job is running at {current_time}")
             
-        # else:
-        #     logger.info(f"Crose high low job is not running outside of trading hours {current_time}")
-        #     return
+        else:
+            logger.info(f"Crose high low job is not runn    ing outside of trading hours {current_time}")
+            return
         if Zerodha is None:
             Zerodha = ZerodhaAPI()
         
         # order in database
+        #sector = Orders.objects.filter(status__in=['PENDING','CANCELLED'])
+
         orders = Orders.objects.filter(status__in=['PENDING','CANCELLED'])
         token_exist = []
+        parent_symbol_exist = []
         if orders.exists():
             #all token in orders
             token_exist = orders.values_list('parent_token', flat=True)
             token_exist = list(token_exist)
+            parent_symbol_exist = orders.values_list('parent_symbol', flat=True)
         
             
         expiry_date = settings.EXPIRY
         instruments = Zerodha.kite.instruments("NFO")
+
         instrument_df = pd.DataFrame(instruments)
         instrument_df = instrument_df[(instrument_df["segment"] == 'NFO-OPT')]
         symbol = instrument_df['name'].unique()
         symbols_list = symbol.tolist()
         symbols_list = [item for item in symbols_list if item not in ['NIFTY','BANKNIFTY','360ONE','FINNIFTY','MIDCPNIFTY','NIFTYNXT50']]
 
+        # define sector list
+        sector_id_list = [2,12,3]
+
+        if len(sector_id_list)>0:
+            sector_symbol = SectorSymbol.objects.filter(sector_id__in=sector_id_list)
+        else:
+            sector_symbol = SectorSymbol.objects.all()
+        symbols_list = [item.symbol for item in sector_symbol]
+        
+    
         #df = pd.DataFrame()
 
         quote_data = Zerodha.kite.quote([f"NSE:{symbol}" for symbol in symbols_list])
@@ -698,7 +716,28 @@ def crose_high_low(Zerodha=None):
         symbol_option_list = []
         rsi_symbol_option_list = []
         for symbol in symbols_list:
-            symbol = 'MUTHOOTFIN'
+            #symbol = 'MARICO'
+            if symbol in parent_symbol_exist:
+                logger.info(f" {symbol} already exists in orders. Skipping.")
+                continue
+
+
+            expiry_date = settings.EXPIRY
+            created_date = datetime.now().date()
+            
+            result = COI.objects.filter(created_at__date=created_date,symbol=symbol,expiry_date=expiry_date).order_by('-id')
+            df = pd.DataFrame.from_records(result.values())
+            if df.empty:
+                logger.info(f"{symbol} Record Not Found tables")
+                continue
+
+            
+            df = df.sort_values(by='id', ascending=True)
+            df['date'] = pd.to_datetime(df['created_at']).dt.date
+            df['time'] = pd.to_datetime(df['created_at']).dt.strftime('%H:%M')
+            last_time = df['time'].iloc[-1]
+            df = df[df['time']==last_time]
+
             if symbol == 'NIFTY' or symbol == 'BANKNIFTY' or symbol == '360ONE' or symbol == 'PGEL':
                 continue
             try:
@@ -709,6 +748,10 @@ def crose_high_low(Zerodha=None):
             except Exception as e:
                 logger.error(f"Error fetching current price for {symbol}: {str(e)}")
                 continue
+
+            df = decrease_strike(df,current_price,3)
+            call_coi = df.loc[df['strike']>current_price,'call_coi'].sum()
+            put_coi = df.loc[df['strike']<current_price,'put_coi'].sum()
             
             instrument_token = quote_data[f"NSE:{symbol}"]["instrument_token"]
             if str(instrument_token) in token_exist:
@@ -746,6 +789,7 @@ def crose_high_low(Zerodha=None):
             df_symbol_5min.set_index('date', inplace=True)
             df_15min = resample_ohlc(df_symbol_5min, '15min')
             logger.info(f"time 15 min candle {symbol}")
+            logger.info(f"time 15 min candle {df_15min}")
 
   
             # previous_day = (datetime.now() - timedelta(days=1)).date()
@@ -755,11 +799,11 @@ def crose_high_low(Zerodha=None):
             logger.info(f"time df_15min_today today {symbol}")
 
 
-            rsi_symbol = RSI_DIVESION(df_symbol_5min,df_15min_today,df_symbol_day,symbol,instrument_token,Zerodha)
-            if rsi_symbol != '':
-                rsi_symbol_option_list.append(rsi_symbol)
-                logger.info(f"RSI Diversion symbol list: {rsi_symbol_option_list}")
-            continue
+            # rsi_symbol = RSI_DIVESION(df_symbol_5min,df_15min_today,df_symbol_day,symbol,instrument_token,Zerodha)
+            # if rsi_symbol != '':
+            #     rsi_symbol_option_list.append(rsi_symbol)
+            #     logger.info(f"RSI Diversion symbol list: {rsi_symbol_option_list}")
+            #continue
            
 
             if len(df_symbol_day) < 2:
@@ -771,14 +815,19 @@ def crose_high_low(Zerodha=None):
             open_low = df_symbol_day['open'].iloc[-1] == df_symbol_day['low'].iloc[-1]
             if open_low:
                 symbol_option_list.append(symbol)
+            open_low = True
             
             #crose 15min close
             
-            min15_close_crose =   current_price > df_15min_today['close'].iloc[0]  
+            min15_close_crose =   current_price > df_15min_today['high'].iloc[0]  
+
+
+            pre_close = df_symbol_5min['close'].iloc[-1] < df_15min_today['high'].iloc[0]
             
             # if current_price > df_symbol['high'].iloc[-2] and df_symbol['open'].iloc[-1] < df_symbol['high'].iloc[-2] and current_price > df_symbol['open'].iloc[-1]:
             #min15_close_crose = True # true for testing
-            if open_low and min15_close_crose:
+            ############## for call ATH ##############################
+            if open_low and min15_close_crose and pre_close and put_coi>call_coi:
                 """ open equal to low """
                 logger.info(f"BUY call for {symbol} at {current_price}")
                 logger.info(f"df_symbol: {df_symbol_day.tail(3)}")
@@ -820,15 +869,65 @@ def crose_high_low(Zerodha=None):
                     # if order:
                     #     executor = ThreadPoolExecutor(max_workers=4)
                     #     executor.submit(zerodha_place_order)
+
+            ############## for put ATL ##############################
+
+            min15_low_crose =   current_price < df_15min_today['low'].iloc[0]
+            #min15_low_crose = True
+            pre_close = df_symbol_5min['close'].iloc[-1] > df_15min_today['high'].iloc[0]
+            if open_low and min15_low_crose and pre_close and put_coi<call_coi:
+                """ open equal to low """
+                logger.info(f"BUY Put for {symbol} at {current_price}")
+                logger.info(f"df_symbol: {df_symbol_day.tail(3)}")
+                
+                instrument_symbol = instrument_df[(instrument_df['name']==symbol) & (instrument_df['instrument_type']=='PE') & (instrument_df['strike']<current_price) ]
+
+                symbol_option = instrument_symbol.iloc[0]
+                instrument_token_option = symbol_option['instrument_token']
+                if str(instrument_token_option) not in token_exist:
+                    
+                    
+                    tradingsymbol = symbol_option['tradingsymbol']
+                    quantity = symbol_option['lot_size']
+                    
+
+                    quote_data_option = Zerodha.kite.quote([f"NFO:{tradingsymbol}"])
+                    stoploss = df_15min_today['low'].iloc[0]
+                    current_price_option = quote_data_option[f"NFO:{tradingsymbol}"]['last_price']
+                    logger.info(f"Placing BUY order for {tradingsymbol} at {current_price_option}")
+
+                    order = Orders.objects.create(
+                        instrument_token=instrument_token_option,
+                        symbol=tradingsymbol,
+                        price=current_price_option,
+                        order_type=Zerodha.kite.ORDER_TYPE_LIMIT,
+                        quantity=quantity,
+                        product=Zerodha.PRODUCT_NRML,
+                        status='CANCELLED',
+                        exchange='NFO',  
+                        strategy='ATH',
+                        stoploss=stoploss,
+                        trigger_price=0,
+                        parent_symbol = symbol,
+                        parent_token = instrument_token,
+                        option_type = 'CE',
+                        symbol_price = current_price
+
+                    )
+                    # if order:
+                    #     executor = ThreadPoolExecutor(max_workers=4)
+                    #     executor.submit(zerodha_place_order)
                         
-            else:
-                logger.info(f"SELL signal for {symbol} at {current_price}")
+            
             
             
             #break        
 
         symbol_option_list_str = ', '.join(symbol_option_list)
         logger.info(f"Symbols with open equal to low today: {symbol_option_list_str}")
+        logger.info("start_time: %s", start_time)
+        logger.info("Completed at %s", datetime.now())
+        logger.info("Duration: %s seconds", (datetime.now() - start_time).total_seconds())  
         
     except Exception as e:
         logger.error("Error in crose_high_low job: %s", str(e), exc_info=True)
@@ -839,7 +938,7 @@ def crose_high_low(Zerodha=None):
         logger.info("Crose high low job started at %s", start_time)
         logger.info("Crose high low job ended at %s", end_time)
         # Calculate and log the total time taken for the job
-        logger.info("Total time taken for crose_high_low job: %s seconds", (end_time - start_time).total_seconds())
+        logger.info("Total time taken for crose_high_low job gajender: %s seconds", (end_time - start_time).total_seconds())
     
 def pre_post_market_stock():
     """
@@ -889,18 +988,278 @@ def pre_post_market_stock():
         raise
 
 def bhavcopy_read():
-    df = pd.read_csv(os.path.join(PROJECT_PATH,'astrology','DATA/bhavcopy','ghavcopy_20260703.csv'))
+
+    #https://www.nseindia.com/all-reports-derivatives
+
+    current_date = (datetime.now()).strftime("%Y-%m-%d")
+    current_date = "2026-07-10"
+
+    df = pd.read_csv(os.path.join(PROJECT_PATH, 'astrology', 'DATA/bhavcopy', 'ghavcopy_' + current_date + '.csv'))
     expiry = settings.EXPIRY
     symbol = "RELIANCE"
-    df = df[(df['TckrSymb']==symbol) & (df['XpryDt']==expiry)]
+    df = df[(df['XpryDt']==expiry)]
+
+    df_sorted = df.sort_values(by='OpnIntrst', ascending=False)
+    print(df_sorted[['TckrSymb','FinInstrmNm','OpnIntrst']].head(10))
+
+    df = df[(df['TckrSymb']==symbol)]
+    df = df[['TradDt','UndrlygPric','TckrSymb','XpryDt','StrkPric','OptnTp','FinInstrmNm','SttlmPric','OpnIntrst','ChngInOpnIntrst','TtlTradgVol']] 
+
+    
+
+    df = df.dropna()
+
+    df = df.rename(columns={'TradDt': 'date', 
+                            'UndrlygPric': 'last_price',
+                            'FinInstrmNm':'tradingsymbol',
+                            'StrkPric':'strike',
+                            'TckrSymb': 'symbol',
+                            'XpryDt': 'expiry_date',
+                            'OptnTp': 'option_type',
+                            'SttlmPric': 'price',
+                            'OpnIntrst': 'oi',
+                            'ChngInOpnIntrst':'coi',
+                            'TtlTradgVol':'volume'
+                            })
+    column_list = df.columns.tolist()
+    column_list.remove('option_type')
+    column_list.remove('strike')
+    pivot_df = df.pivot(
+        index='strike',
+        columns='option_type',
+        
+        values=column_list
+    )
+    pivot_df.columns = [f"{col[1]}_{col[0]}" for col in pivot_df.columns]
+
+    # Reset index to make strike a column again
+    pivot_df.reset_index(inplace=True)
+    pivot_df = pivot_df.fillna(0)
+
+
 
     print("rrr")
+
+def nifty_gann():
+    # open_price=24127
+    # levels = calculate_gann_values(open_price)
+
+    # print(levels)
+    # gann_list = []
+    # gann_list.extend(levels['buy_target'])
+    # gann_list.extend(levels['sell_target'])
+    # gann_list.append(levels['buy_above'])
+    # gann_list.append(levels['sell_below'])
+
+    # gann_list = sorted(gann_list,reverse=True)
+    
+    
+    # print(f"Buy Above: {levels['buy_above']}")
+    # print(f"Sell Below: {levels['sell_below']}")
+    # print(f"Buy Targets: {levels['buy_target']}")
+    # print(f"Sell Targets: {levels['sell_target']}")
+
+    
+    #current_price=24127
+    # above_list = [x for x in gann_list if x > current_price]
+    # below_list = [x for x in gann_list if x < current_price]
+
+    
+
+    # nifty_data = [24127,24100,24080,24045,23990,24000,24100,24200]
+    #[24323.83, 24284.87, 24245.93, 24207.03, 24168.16, 24141.39, 24102.56, 24075.8, 24037.01, 23998.26, 23959.53, 23920.84]
+
+    today = datetime.now().date()
+    weekday = datetime.today().weekday()
+    if weekday == 5:
+        today = today - timedelta(days=1)
+    if weekday == 6:
+        today = today - timedelta(days=2)
+
+    #today =  "2026-07-20"   
+
+
+    symbol_name = "NIFTY"
+    created_date = today
+    expiry_date = "2026-07-21"
+    result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('id')
+
+    df = pd.DataFrame.from_records(result.values())
+    df['date'] = pd.to_datetime(df['created_at']).dt.date
+    df['time'] = pd.to_datetime(df['created_at']).dt.strftime('%H:%M')
+
+    time_unique = df['time'].unique()
+    time_unique = time_unique.tolist()
+    time_unique.sort( reverse=False)
+
+    
+    current_price = df['current_price'].iloc[0]
+
+    #open_price=24127
+    # levels = calculate_gann_values(current_price)
+
+    # print(levels)
+    # gann_list = []
+    # gann_list.extend(levels['buy_target'])
+    # gann_list.extend(levels['sell_target'])
+    # gann_list.append(levels['buy_above'])
+    # gann_list.append(levels['sell_below'])
+
+    # gann_list = sorted(gann_list,reverse=True)
+
+    # print(f"Buy Above: {levels['buy_above']}")
+    # print(f"Sell Below: {levels['sell_below']}")
+    # print(f"Buy Targets: {levels['buy_target']}")
+    # print(f"Sell Targets: {levels['sell_target']}")
+
+    gann_list = calculate_gann_values_gaj(current_price)
+
+
+
+    above_level = [x for x in gann_list if x > current_price][-1]
+    below_level = [x for x in gann_list if x < current_price][0]
+
+    
+    # for user in nifty_order:
+    #     print(user.id, user.symbol)
+
+    
+    
+
+
+    print("gann_list",gann_list)
+    #print("time_unique",time_unique)
+    for time in time_unique:
+        print("=============")
+        nifty_order = NiftyOrder.objects.filter(status='PENDING')
+        if nifty_order:
+            order_pending = nifty_order[0].status
+            order_option = nifty_order[0].order_option
+            order_type = nifty_order[0].order_type
+        else:
+            order_pending = ""
+            order_option = ""
+            order_type = ""
+
+        df_data = df[df['time']==time]
+        pcr = df_data['pcr'].iloc[-1]
+        current_price = df_data['current_price'].iloc[-1]
+        print("current_price",current_price)
+        print("above_level",above_level)
+        print("below_level",below_level)
+        
+        if order_pending=="PENDING":
+            if order_type == "BUY" and order_option == "CE":
+                print("********buy buy")
+                if current_price>above_level:
+                    print("Update stoplose")
+                    stoplose = current_price
+                    #update stoplose
+                    print("stoplose=",stoplose)
+                    above_level = [x for x in gann_list if x > current_price][-1]
+                    below_level = [x for x in gann_list if x < current_price][1]
+                   
+
+                elif current_price<below_level:
+                    print("Sell")
+                    order_id = nifty_order[0].id
+                    order = NiftyOrder.objects.get(id=order_id)
+                    order.sell_price = current_price
+                    order.profit =  current_price - order.buy_price
+                    order.status = "COMPLETED"
+                    order.sell_time  = df_data['time'].iloc[-1]
+                    order.save()
+                    # above_level = [x for x in gann_list if x > current_price][-1]
+                    # below_level = [x for x in gann_list if x < current_price][0]
+                    
+                    #exit order
+            if order_type == "BUY" and order_option == "PE": 
+                print("*********put buy")
+
+                if current_price<below_level:
+
+                    logger.info("put update stoplose",)
+                    logger.info("timesssssssss %s", time)
+                    logger.info("gann_list %s", gann_list)
+                    
+
+                    logger.info("stoplose above_level pre %s", above_level)
+                    logger.info("current_price %s", current_price)
+                    logger.info("stoplose below_level pre %s", below_level)
+                    
+                    above_level = [x for x in gann_list if x > current_price][-2]
+                    below_level = [x for x in gann_list if x < current_price][0]
+ 
+                    logger.info("above_level new %s", above_level)
+                    logger.info("current_price %s", current_price)
+                    logger.info("below_level new %s", below_level)
+
+                    
+
+                if current_price > above_level:
+                    #exit order
+                    print("sell")
+                    order_id = nifty_order[0].id
+                    order = NiftyOrder.objects.get(id=order_id)
+                    order.sell_price = current_price
+                    order.profit = order.buy_price - current_price
+                    order.status = "COMPLETED"
+                    order.sell_time  = df_data['time'].iloc[-1]
+                    order.save()
+                    # above_level = [x for x in gann_list if x > current_price][-1]
+                    # below_level = [x for x in gann_list if x < current_price][0]
+
+
+        else:
+            # fress order
+            # for call buy
+            if current_price>above_level :
+                symbol = "NIFTY"
+                buy_price = current_price
+                order_type = "BUY"
+                order_option = "CE"
+                status = "PENDING"
+                NiftyOrder.objects.create(
+                        symbol = symbol,
+                        buy_price = buy_price,
+                        order_type = order_type,
+                        order_option = order_option,
+                        status = status,
+                        buy_time = df_data['time'].iloc[-1]
+                    )  
+
+            # for put buy 
+            if current_price<below_level :
+                print("Sell")
+                symbol = "NIFTY"
+                buy_price = current_price
+                order_type = "BUY"
+                order_option = "PE"
+                status = "PENDING"
+                NiftyOrder.objects.create(
+                        symbol = symbol,
+                        buy_price = buy_price,
+                        order_type = order_type,
+                        order_option = order_option,
+                        status = status,
+                        buy_time = df_data['time'].iloc[-1]
+                    )  
+                
+            
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     Zerodha = ZerodhaAPI()
     # This block is for testing the functions locally
     #my_scheduled_job()
     #bhavcopy_read()
+    #nifty_gann()
 
     #scanner_200ma()
     #zerodha_place_order()
@@ -911,7 +1270,7 @@ if __name__ == "__main__":
     #orderdetsil check open order
     #OrdersDetailStatusUpdate(Zerodha)
 
-    #crose_high_low(Zerodha)
+    crose_high_low(Zerodha)
     #pre_post_market_stock()
     # watchlists = Zerodha.kite.get_watchlists()
     # print(watchlists)

@@ -28,7 +28,7 @@ class ZerodhaAPI:
     def __init__(self, request=None):
         self.api_key = ZERODHA_API_KEY
         self.api_secret = ZERODHA_API_SECRET
-       
+        return
         #self.request = request
         self.access_token = self._get_token()
         self.kite = KiteConnect(api_key=self.api_key)
@@ -45,10 +45,12 @@ class ZerodhaAPI:
         self.PRODUCT_NRML = "NRML"
         self.PRODUCT_MIS = "MIS"
         self.PRODUCT_CNC = "CNC"
+        
 
     def _get_token(self):
         """Get token from JSON file if it exists and is not expired"""
         logger.info("*********Checking for existing token***********")
+
         
         try:
             if os.path.exists(os.path.dirname(TOKEN_FILE)):
@@ -87,7 +89,6 @@ class ZerodhaAPI:
 
     def authenticate(self):
         """Complete the authentication flow"""
-        pass
         try:
             # Step 1: Get login URL and open in browser
             if self.access_token is None:

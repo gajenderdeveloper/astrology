@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^kotak/', include('KOTAK_NEO_API.urls')),
     #url(r'^zerodha/', include('zerodha.urls')),
     #url(r'^ckeditor/', include('ckeditor_uploader.urls')), # The CKEditor path
-    
+    url(r'^mktgameplan/', include('market_game_plan.urls')),
 
 
 ]

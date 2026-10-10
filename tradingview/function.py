@@ -224,3 +224,19 @@ def topGainer():
     
 
     return data
+
+
+def decrease_strike(df,current_price,n=10):
+
+    strike = df['strike'].to_list()
+    call_strike = [x for x in strike if current_price<x]
+    call_strike = call_strike[0:n]
+
+    put_strike = [x for x in strike if current_price>x]
+    put_strike = put_strike[-n:]
+
+    call_put_strike =  put_strike+call_strike
+
+    call_put_strike =  put_strike+call_strike
+    df = df[df['strike'].isin(call_put_strike)]
+    return df

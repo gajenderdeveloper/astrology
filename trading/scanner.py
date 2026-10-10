@@ -26,7 +26,7 @@ from trading.color_coi import *
 from trading.function import *
 from asyncio import create_task, sleep
 from django.http import JsonResponse
-from .nse_options import MostActiveContracts
+#from .nse_options import MostActiveContracts
 import requests
 
 from ZERODHA_API.zerodha_integration import ZerodhaAPI
@@ -561,6 +561,12 @@ def option_chain_coi_chart(request, symbol_name):
             
         if today.strftime('%Y-%m-%d') in holiday_list:
             today = today - timedelta(days=1)
+
+        weekday = datetime.today().weekday()
+        if weekday == 5:
+            today = today - timedelta(days=1)
+        if weekday == 6:
+            today = today - timedelta(days=2)
         
 
         if request.GET.get('date'):
@@ -794,6 +800,9 @@ def option_chain_coi_chart(request, symbol_name):
         ############# End Plotly Chart ########################
         df['call_lots'] = df['call_lots'].astype(int)
         #print(df[['symbol','call_lots','CE_color_total_oi','PE_color_total_oi']])
+        print("==================testing=======")
+        #print(df['strike'])
+        df = decrease_strike(df,last_price,10)
         context = {
                 'expiry_date':expiry_date,
                 'date_str':date_str,
@@ -848,6 +857,7 @@ def nifty_coi_chart(request):
     current_date = datetime.now()
     current_year = current_date.year
     current_month = current_date.month
+    #current_month = 9
     index_df = pd.DataFrame()
     instrument_file = os.path.join(PROJECT_PATH,'astrology','DATA','instruments.csv')
     instruments_df = pd.read_csv(instrument_file)
@@ -873,6 +883,7 @@ def nifty_coi_chart(request):
     else:
         #expiry_date = settings.EXPIRY
         expiry_date = expiry_list[0]
+        #expiry_date = '2026-09-01'
 
     print("===================nifty option_chain_coi_chart gajender=",expiry_date)
     try:
@@ -899,6 +910,12 @@ def nifty_coi_chart(request):
         if today.strftime('%Y-%m-%d') in holiday_list:
             today = today - timedelta(days=1)
         
+        weekday = datetime.today().weekday()
+        if weekday == 5:
+            today = today - timedelta(days=1)
+        if weekday == 6:
+            today = today - timedelta(days=2)
+        
         if request.GET.get('date'):
             date_str = request.GET.get('date')
             created_date = pd.to_datetime(date_str).date()
@@ -912,6 +929,7 @@ def nifty_coi_chart(request):
         print(date_list)
 
         result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
+        print(result.query)
 
         df = pd.DataFrame.from_records(result.values())
         if df.empty:
@@ -1125,6 +1143,9 @@ def nifty_coi_chart(request):
         df['call_lots'] = df['call_lots'].astype(int)
         pcr = df.iloc[-1]['pcr']
         #print(df[['symbol','call_lots','CE_color_total_oi','PE_color_total_oi']])
+        # print(df.columns)
+        # print(df[['symbol','strike','CE_color_total_oi','PE_color_total_oi']])
+        df = decrease_strike(df,last_price,10)
         context = {
                 'expiry_date':expiry_date,
                 'date_str':date_str,
@@ -1157,6 +1178,219 @@ def nifty_coi_chart(request):
 
        
         return render(request, 'trading/index_coi_data_chart.html',context )
+
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return JsonResponse({'Error': {str(e)}})
+
+@login_required(login_url='/loginpage')
+
+def bhavcopy(request,symbol_name):
+    symbol_name = symbol_name
+    symbol_name_original = symbol_name
+
+    
+    # if request.GET.get('expiry'):
+    #     expiry_date = request.GET.get('expiry')
+    #     #expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+    # else:
+    #     #expiry_date = settings.EXPIRY
+    #     expiry_date = expiry_list[0]
+
+    try:
+        if symbol_name:
+                symbol_name = symbol_name.upper()
+        else:
+            symbol_name = 'ABB'
+        
+        holiday_list = ['2025-11-05','2025-12-25']
+        current_time = datetime.now().time()
+
+        # if time(1, 7) <= current_time <= time(9, 14):
+        #     today = datetime.now().date()-timedelta(days=1)
+        # else:
+        #     today = datetime.now().date()
+            
+        # if today.strftime('%Y-%m-%d') in holiday_list:
+        #     today = today - timedelta(days=1)
+        
+        today = datetime.now().date()
+        if request.GET.get('date'):
+            date_str = request.GET.get('date')
+            created_date = pd.to_datetime(date_str).date()
+        else:
+            created_date = today - timedelta(days=1)
+
+        print("============ created_date =====================")   
+        created_date = created_date.strftime("%Y-%m-%d") 
+        print(created_date)
+        if request.GET.get('date'):
+            date_str = request.GET.get('date')
+        else:
+            date_str = created_date
+
+        date_range = pd.date_range(start=(today - timedelta(days=10)), end=today, freq='D')
+        date_list = [date.date() for date in date_range if date.weekday() < 5]
+        date_list = [d.strftime('%Y-%m-%d') for d in date_list]
+        date_list.reverse()  # Reverse the list to have the most recent date first
+        print(date_list)
+
+        # result = COI_INDEX.objects.filter(created_at__date=created_date,symbol=symbol_name,expiry_date=expiry_date).order_by('-id')
+
+        # df = pd.DataFrame.from_records(result.values())
+
+        #current_date = (datetime.now()).strftime("%Y-%m-%d")
+        #created_date = "2026-07-09"
+        print("=============date list===========")
+        date_list_4 = date_list[0:4]
+        # print(date_list_4)
+        # df_bhavcopy_all = pd.DataFrame()
+        # for d in date_list_4:
+        #     print(d)
+        #     file_path = os.path.join(PROJECT_PATH, 'astrology', 'DATA/bhavcopy', 'ghavcopy_' + d + '.csv')
+        #     if os.path.isfile(file_path):
+        #         df_bhavcopy = pd.read_csv(file_path)
+        #         df_bhavcopy_all = pd.concat([df_bhavcopy_all, df_bhavcopy], ignore_index=True)
+        # print(df_bhavcopy_all)
+
+
+
+        df_bhavcopy = pd.read_csv(os.path.join(PROJECT_PATH, 'astrology', 'DATA/bhavcopy', 'ghavcopy_' + created_date + '.csv'))
+
+        #df_bhavcopy = df_bhavcopy_all[df_bhavcopy_all['TradDt']==created_date]
+        
+
+        print("============Bhave copy=========")
+        print(df_bhavcopy.columns)
+        symbol = df_bhavcopy['TckrSymb'].unique()
+        symbols_list = symbol.tolist()
+        symbols_list.sort()
+        print(symbols_list)
+        
+
+        
+
+        df_bhavcopy = df_bhavcopy[(df_bhavcopy['TckrSymb']==symbol_name) ]
+        df_bhavcopy['expiry'] = df_bhavcopy['XpryDt'].astype(str)
+        expiry_list = df_bhavcopy['expiry'].unique()
+        expiry_list.sort()
+        if request.GET.get('expiry'):
+            expiry_date = request.GET.get('expiry')
+            #expiry_date = datetime.strptime(expiry_date, '%Y-%m-%d')
+        else:
+            expiry_date = settings.EXPIRY
+            #expiry_date = expiry_list[0]
+        
+        print("expiry_date================",expiry_date)
+        df_bhavcopy = df_bhavcopy[df_bhavcopy['XpryDt']==expiry_date]
+        
+        
+        print(df_bhavcopy)
+        print(df_bhavcopy.columns)
+
+        df_bhavcopy = df_bhavcopy[['TradDt','UndrlygPric','TckrSymb','XpryDt','StrkPric','OptnTp','FinInstrmNm','SttlmPric','OpnIntrst','ChngInOpnIntrst','TtlTradgVol']] 
+
+        df_bhavcopy = df_bhavcopy.dropna()
+
+        df_bhavcopy = df_bhavcopy.rename(columns={'TradDt': 'date', 
+                                'UndrlygPric': 'last_price',
+                                'FinInstrmNm':'tradingsymbol',
+                                'StrkPric':'strike',
+                                'TckrSymb': 'symbol',
+                                'XpryDt': 'expiry_date',
+                                'OptnTp': 'option_type',
+                                'SttlmPric': 'price',
+                                'OpnIntrst': 'oi',
+                                'ChngInOpnIntrst':'coi',
+                                'TtlTradgVol':'volume'
+                                })
+        
+        
+        last_price = df_bhavcopy.iloc[-1]['last_price']
+        #print(last_price)
+        column_list = df_bhavcopy.columns.tolist()
+        column_list.remove('option_type')
+        column_list.remove('strike')
+        df = df_bhavcopy.pivot(
+            index='strike',
+            columns='option_type',
+            
+            values=column_list
+        )
+        df.columns = [f"{col[1]}_{col[0]}" for col in df.columns]
+
+        # Reset index to make strike a column again
+        df.reset_index(inplace=True)
+        df = df.fillna(0)
+        df = df.rename(columns={
+                                'CE_coi': 'call_coi', 
+                                'CE_oi': 'call_oi', 
+                                'PE_coi':'put_coi',
+                                'PE_oi':'put_oi',
+                                'CE_volume': 'call_volume', 
+                                'PE_volume': 'put_volume', 
+                                'CE_price': 'call_current_price', 
+                                'PE_price': 'put_current_price', 
+
+                                })
+        
+        #last_price = df['current_price'].values[0]
+        #print(df)
+
+        max_volume_CE = df['call_volume'].max()
+        second_largest_volume_CE = df['call_volume'].sort_values(ascending=False).iloc[1]
+
+        max_volume_PE  = df['put_volume'].max()
+        second_largest_volume_PE = df['put_volume'].sort_values(ascending=False).iloc[1]
+        # # for change in oi
+        max_coi_CE = df['call_coi'].max()
+        second_largest_coi_CE = df['call_coi'].sort_values(ascending=False).iloc[1]
+        min_coi_CE = df['call_coi'].min()
+        max_coi_PE  = df['put_coi'].max()
+        second_largest_coi_PE = df['put_coi'].sort_values(ascending=False).iloc[1]
+        min_coi_PE = df['put_coi'].min()
+        max_CE_oi = df['call_oi'].max()
+        second_largest_CE_oi = df['call_oi'].sort_values(ascending=False).iloc[1]
+        min_CE_oi = df['call_oi'].min()
+        max_PE_oi = df['put_oi'].max()
+        second_largest_PE_oi = df['put_oi'].sort_values(ascending=False).iloc[1]
+        min_PE_oi = df['put_oi'].min()
+
+        df['CE_color'] = df.apply(CE_color,axis=1,args=(last_price,))
+        df['PE_color'] = df.apply(PE_color,axis=1,args=(last_price,)) 
+
+        df['CE_color_volume'] = df.apply(CE_color_volume,axis=1,args=(max_volume_CE, second_largest_volume_CE,last_price))
+        df['PE_color_volume'] = df.apply(PE_color_volume,axis=1,args=(max_volume_PE, second_largest_volume_PE,last_price)) 
+
+        df['CE_color_change_in_oi'] = df.apply(CE_color_change_in_oi,axis=1,args=(max_coi_CE, second_largest_coi_CE, min_coi_CE,last_price))
+        df['PE_color_change_in_oi'] = df.apply(PE_color_change_in_oi,axis=1,args=(max_coi_PE, second_largest_coi_PE, min_coi_PE,last_price)) 
+
+        df['CE_color_total_oi'] = df.apply(CE_color_total_oi, axis=1, args=(
+            max_CE_oi, second_largest_CE_oi, min_CE_oi, last_price))
+        df['PE_color_total_oi'] = df.apply(PE_color_total_oi, axis=1, args=(
+            max_PE_oi, second_largest_PE_oi, min_PE_oi, last_price))
+        # print(df)
+        # print(df.columns)
+        df = decrease_strike(df,last_price,10)
+        total_call_oi = df['call_oi'].sum()
+        total_call_coi = df['call_coi'].sum()
+        context = {
+                'expiry_date':expiry_date,
+                'date_str':date_str,
+                'symbol_name' : symbol_name_original,
+                'symbol_list' : symbols_list,
+                'current_price' : last_price,
+                'df':df,
+                'date_list':date_list,
+                'expiry_list':expiry_list,
+                'total_call_oi':total_call_oi,
+                'total_call_coi':total_call_coi,
+            }
+       
+
+       
+        return render(request, 'trading/bhavcopy_coi_data_chart.html',context )
 
         
     except Exception as e:
@@ -1498,6 +1732,7 @@ def ajax_chart(request):
             )
             chart_html = fig.to_html(full_html=False)
             last_price = df_oi['current_price'].values[0]
+            df_oi = decrease_strike(df_oi,last_price,10)
             context = {
                 'df_oi': df_oi,
                 'current_price' : last_price,
@@ -1586,4 +1821,4 @@ def get_notification(request):
 if __name__ == "__main__":
     # This block is for testing the functions locally
     #my_scheduled_job()
-    option_chain_coi()  # Pass None for request in standalone mode
+    bhavcopy("RELIANCE")  # Pass None for request in standalone mode

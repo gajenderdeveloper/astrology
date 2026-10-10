@@ -42,6 +42,7 @@
 </style>
 <!-- Starter Section Section -->
 <section id="" class="starter-section " style="padding: 10px 0px !important;">
+  
     <div class="container" data-aos="fade-up">
       <div class="section-header" >
         <form name="frm" id="frm_ption" method="get" action="">  
@@ -100,14 +101,8 @@
       </div>
     </form>
       </div>
-      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#mychart_id" aria-expanded="true" aria-controls="mychart_id">
-    Hide
-  </button>
-      <div id="mychart_id" class="">
-      <div class="row " >
-        {{ chart | safe}}
-        </div>
-      </div>
+      
+      
     
       <div class="table-responsive " style="position: relative; font-size: 12px;">
          <div class="table-responsive sticky-table-container">
@@ -245,6 +240,12 @@
                  {% endfor %}
           </tbody>
         </table>
+        </div>
+      </div>
+
+      <div id="mychart_id" class="">
+      <div class="row " >
+        {{ chart | safe}}
         </div>
       </div>
       </div> 

@@ -149,3 +149,112 @@ def generate_stock_chart(request):
         chart_html = f"Error in plotting chart: {e}"
 
     return chart_html
+
+
+import math
+
+def calculate_gann_values(price):
+    """
+    Generates Gann Square of 9 support, resistance, and target levels.
+    Based on concepts from a Gann Square of 9 implementation [citation:1].
+    """
+    y = price
+    if not price:
+        return {}
+
+    root = price ** 0.5
+    minus_two = root - 2
+    rounded = math.ceil(minus_two)
+    # result = rounded ** 2 # This variable is not used in the final output
+
+    x = []
+    sqr_x = []
+    sqr_x_rounded = []
+    sqr_x_rounded_root = []
+
+    # Generate a grid of 24 values around the initial calculation
+    for i in range(24):
+        x.append(rounded + 0.125 * (i + 1))
+        sqr_x.append(x[i] * x[i])
+        sqr_x_rounded.append(round(sqr_x[i] * 100) / 100)
+        sqr_x_rounded_root.append(round((price - sqr_x_rounded[i]) * 100) / 100)
+
+    # Find the index where the difference becomes negative
+    min_positive_index = -1
+    for i in range(len(sqr_x_rounded_root)):
+        if sqr_x_rounded_root[i] < 0:
+            min_positive_index = i
+            break
+
+    support = []
+    resistance = []
+    buy_target = []
+    sell_target = []
+
+    def roundup(number, places):
+        factor = 10 ** places
+        return round(number * factor) / factor
+
+    if min_positive_index >= 0:
+        buy_above = sqr_x_rounded[min_positive_index]
+        sell_below = sqr_x_rounded[min_positive_index - 1]
+
+        # Calculate 5 levels of support, resistance, and targets
+        for i in range(5):
+            support.append(sqr_x_rounded[min_positive_index - 2 - i])
+            resistance.append(sqr_x_rounded[min_positive_index + 1 + i])
+            buy_target.append(roundup(resistance[i] * 0.9995, 2))
+            sell_target.append(roundup(support[i] * 1.0005, 2))
+    else:
+        buy_above = ""
+        sell_below = ""
+        support = [""] * 5
+        resistance = [""] * 5
+        buy_target = [""] * 5
+        sell_target = [""] * 5
+
+    return {
+        "buy_above": buy_above,
+        "sell_below": sell_below,
+        "buy_target": buy_target,
+        "sell_target": sell_target
+    }
+
+    # Example usage with a sample price
+    # price_input = 19845.76
+    # levels = calculate_gann_values(price_input)
+
+    # print(f"Buy Above: {levels['buy_above']}")
+    # print(f"Sell Below: {levels['sell_below']}")
+    # print(f"Buy Targets: {levels['buy_target']}")
+    # print(f"Sell Targets: {levels['sell_target']}")
+
+def decrease_strike(df,current_price,n=10):
+
+    strike = df['strike'].to_list()
+    call_strike = [x for x in strike if current_price<x]
+    call_strike = call_strike[0:n]
+
+    put_strike = [x for x in strike if current_price>x]
+    put_strike = put_strike[-n:]
+
+    call_put_strike =  put_strike+call_strike
+
+    call_put_strike =  put_strike+call_strike
+    df = df[df['strike'].isin(call_put_strike)]
+    return df
+
+
+
+def calculate_gann_values_gaj(price):
+    price = int(price)
+    results1 = [price + 30 * i for i in range(6)]
+    results1 = results1[1:]
+
+    results2 = [price - 30 * i for i in range(6)]
+    results2 = results2[1:]
+
+    f = results1 + results2
+    gann_list = sorted(f,reverse=True)
+    gann_list = [int(x) for x in gann_list]
+    return gann_list
